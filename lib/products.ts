@@ -328,4 +328,97 @@ export async function getProductCountByCategory(): Promise<Record<string, number
     console.error('카테고리별 상품 개수 조회 실패:', error);
     throw new Error('카테고리별 상품 개수 조회에 실패했습니다.');
   }
-} 
+}
+
+// 연계 상품 관련 함수들
+export async function getProductsByCategory(category: string, excludeId?: string): Promise<Product[]> {
+  try {
+    // 인덱스 에러 방지를 위해 orderBy 제거하고 클라이언트 사이드에서 정렬
+    const q = query(
+      collection(db, PRODUCTS_COLLECTION),
+      where('category', '==', category)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    let products = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate() || new Date()
+    })) as Product[];
+    
+    // 클라이언트 사이드에서 createdAt으로 정렬
+    products = products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    // 현재 편집 중인 상품 제외
+    return excludeId ? products.filter(product => product.id !== excludeId) : products;
+  } catch (error) {
+    console.error('카테고리별 상품 조회 실패:', error);
+    throw new Error('카테고리별 상품 조회에 실패했습니다.');
+  }
+}
+
+export async function getRelatedProducts(productIds: string[]): Promise<Product[]> {
+  try {
+    if (productIds.length === 0) return [];
+    
+    const products: Product[] = [];
+    
+    // Firestore의 in 쿼리는 최대 10개까지만 가능하므로 배치로 처리
+    for (let i = 0; i < productIds.length; i += 10) {
+      const batch = productIds.slice(i, i + 10);
+      const q = query(
+        collection(db, PRODUCTS_COLLECTION),
+        where('__name__', 'in', batch)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const batchProducts = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date()
+      })) as Product[];
+      
+      products.push(...batchProducts);
+    }
+    
+    return products;
+  } catch (error) {
+    console.error('연계 상품 조회 실패:', error);
+    throw new Error('연계 상품 조회에 실패했습니다.');
+  }
+}
+
+export async function searchProducts(searchTerm: string, category?: string): Promise<Product[]> {
+  try {
+    let q = query(collection(db, PRODUCTS_COLLECTION));
+    
+    if (category) {
+      q = query(q, where('category', '==', category));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    const products = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate() || new Date()
+    })) as Product[];
+    
+    // 클라이언트 사이드에서 텍스트 검색 (Firebase에서는 full-text search가 제한적)
+    const filteredProducts = products.filter(product => 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    // 클라이언트 사이드에서 createdAt으로 정렬
+    filteredProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    return filteredProducts;
+  } catch (error) {
+    console.error('상품 검색 실패:', error);
+    throw new Error('상품 검색에 실패했습니다.');
+  }
+}

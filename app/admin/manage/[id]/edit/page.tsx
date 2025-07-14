@@ -3,13 +3,16 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Eye, Upload, X, Plus, Star } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Upload, X, Plus, Star, Search, Link2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SectionParser from '@/components/admin/SectionParser';
 import ImageUploader from '@/components/admin/ImageUploader';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { uploadToCloudinary } from '@/lib/cloudinary';
+import { getProductsByCategory, searchProducts } from '@/lib/products';
+import { Product } from '@/types';
 
 interface ProductForm {
   // 기본 정보
@@ -29,6 +32,15 @@ interface ProductForm {
   
   // 설명
   description: string;
+  // 상품 개요 관련 필드 추가
+  overviewDescription: string;
+  overviewImages: Array<{
+    id: string;
+    url: string;
+    file?: File;
+    alt?: string;
+    caption?: string;
+  }>;
   detailedDescription: {
     overview: string;
     targetUsers: string[];
@@ -80,6 +92,9 @@ interface ProductForm {
   featured: boolean;
   rawDescriptionText: string;
   
+  // 연계 상품 추천 기능
+  relatedProducts: string[];
+  
   // 소스 정보
   source: {
     type: string;
@@ -111,6 +126,9 @@ const initialForm: ProductForm = {
   stockCount: 1,
   availability: 'in_stock',
   description: '',
+  // 상품 개요 초기값 추가
+  overviewDescription: '',
+  overviewImages: [],
   detailedDescription: {
     overview: '',
     targetUsers: [],
@@ -142,6 +160,7 @@ const initialForm: ProductForm = {
   tags: [],
   featured: false,
   rawDescriptionText: '',
+  relatedProducts: [],
   source: {
     type: 'model-house',
     name: '',
@@ -158,13 +177,13 @@ const initialForm: ProductForm = {
 };
 
 const categories = [
-  { value: 'seating', label: '의자/소파' },
-  { value: 'tables', label: '테이블' },
-  { value: 'storage', label: '수납가구' },
-  { value: 'lighting', label: '조명' },
-  { value: 'decor', label: '장식품' },
-  { value: 'rugs', label: '러그' },
-  { value: 'outdoor', label: '야외가구' }
+  { value: 'furniture', label: 'Furniture' },
+  { value: 'lighting', label: 'Lighting' },
+  { value: 'kitchen', label: 'Kitchen' },
+  { value: 'accessories', label: 'Accessories' },
+  { value: 'textile', label: 'Textile' },
+  { value: 'kids', label: 'Kids' },
+  { value: 'book', label: 'Book' }
 ];
 
 const conditions = [
@@ -193,6 +212,12 @@ export default function EditProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [newTag, setNewTag] = useState('');
+  
+  // 연계 상품 관련 상태
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const tabs = [
     { id: 'basic', label: '기본 정보' },
@@ -201,6 +226,7 @@ export default function EditProductPage() {
     { id: 'guide', label: '사용 가이드' },
     { id: 'specifications', label: '제품 사양' },
     { id: 'images', label: '이미지' },
+    { id: 'related', label: '연계 상품' },
     { id: 'source', label: '소스 정보' }
   ];
 
@@ -230,6 +256,13 @@ export default function EditProductPage() {
             stockCount: productData.stock || 1,
             availability: productData.availability || 'in_stock',
             description: productData.description || '',
+            overviewDescription: productData.overviewDescription || '',
+            overviewImages: productData.overviewImages?.map((url: string, index: number) => ({
+              id: `overview-${index}`,
+              url,
+              alt: `${productData.name} 개요 이미지 ${index + 1}`,
+              caption: ''
+            })) || [],
             detailedDescription: {
               overview: productData.detailedDescription?.overview || '',
               targetUsers: productData.detailedDescription?.targetUsers || [],
@@ -268,6 +301,7 @@ export default function EditProductPage() {
             tags: productData.tags || [],
             featured: productData.featured || false,
             rawDescriptionText: productData.description || '',
+            relatedProducts: productData.relatedProducts || [],
             source: {
               type: productData.source || 'model-house',
               name: productData.sourceDetails || '',
@@ -334,6 +368,43 @@ export default function EditProductPage() {
     }
   };
 
+  // 연계 상품 관련 함수들
+  const searchRelatedProducts = async () => {
+    if (!searchTerm.trim() && !selectedCategory) return;
+    
+    setIsSearching(true);
+    try {
+      let results: Product[] = [];
+      
+      if (selectedCategory && !searchTerm.trim()) {
+        // 카테고리별 검색
+        results = await getProductsByCategory(selectedCategory, productId);
+      } else if (searchTerm.trim()) {
+        // 텍스트 검색
+        results = await searchProducts(searchTerm, selectedCategory || undefined);
+        // 현재 편집 중인 상품 제외
+        results = results.filter(product => product.id !== productId);
+      }
+      
+      setSearchResults(results);
+    } catch (error) {
+      console.error('연계 상품 검색 실패:', error);
+      alert('연계 상품 검색에 실패했습니다.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const addRelatedProduct = (productId: string) => {
+    if (!form.relatedProducts.includes(productId)) {
+      handleInputChange('relatedProducts', [...form.relatedProducts, productId]);
+    }
+  };
+
+  const removeRelatedProduct = (productId: string) => {
+    handleInputChange('relatedProducts', form.relatedProducts.filter(id => id !== productId));
+  };
+
   const validateForm = () => {
     const errors: string[] = [];
     
@@ -368,6 +439,8 @@ export default function EditProductPage() {
         category: form.category as any,
         subcategory: form.subcategory || '',
         description: form.description,
+        overviewDescription: form.overviewDescription,
+        overviewImages: form.overviewImages.map(img => img.url),
         originalPrice: form.originalPrice,
         salePrice: form.salePrice,
         discount: Math.round(((form.originalPrice - form.salePrice) / form.originalPrice) * 100),
@@ -391,6 +464,7 @@ export default function EditProductPage() {
         source: form.source.type as any,
         sourceDetails: form.source.name || '',
         tags: form.tags,
+        relatedProducts: form.relatedProducts,
         updatedAt: new Date(),
         // 기존 데이터 유지
         views: 0,
@@ -588,28 +662,207 @@ export default function EditProductPage() {
   );
 
   const renderDescriptionSection = () => (
-    <SectionParser
-      rawText={form.rawDescriptionText}
-      onTextChange={(text) => {
-        handleInputChange('rawDescriptionText', text);
-        // 검증을 위해 description 필드도 동시에 업데이트
-        handleInputChange('description', text);
-      }}
-      onParsed={(sections) => {
-        // 파싱된 섹션을 폼에 적용
-        sections.forEach(section => {
-          if (section.type === 'overview') {
-            handleNestedInputChange('detailedDescription', 'overview', section.content);
-          } else if (section.type === 'targetUsers') {
-            handleNestedInputChange('detailedDescription', 'targetUsers', section.content);
-          } else if (section.type === 'suitableSpaces') {
-            handleNestedInputChange('detailedDescription', 'suitableSpaces', section.content);
-          } else if (section.type === 'designStory') {
-            handleNestedInputChange('detailedDescription', 'designStory', section.content);
-          }
-        });
-      }}
-    />
+    <div className="space-y-8">
+      {/* 상품 개요 섹션 */}
+      <div className="bg-card rounded-lg border p-6">
+        <h3 className="text-lg font-medium mb-4">📝 상품 개요</h3>
+        
+        <div className="space-y-6">
+          {/* 개요 텍스트 입력 */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              개요 설명
+              <span className="text-muted-foreground ml-2">(고객이 상품 상세 페이지에서 보게 될 개요 내용)</span>
+            </label>
+            <textarea
+              value={form.overviewDescription}
+              onChange={(e) => handleInputChange('overviewDescription', e.target.value)}
+              className="w-full p-4 border rounded-lg focus:ring-2 focus:ring-primary"
+              rows={6}
+              placeholder="상품의 핵심 특징과 매력을 상세히 설명해주세요...
+
+예시:
+Herman Miller Aeron Chair는 1994년 출시 이후 전 세계 오피스 가구의 혁신을 이끈 대표작입니다. 
+인체공학적 설계와 혁신적인 8Z 펠리클 메쉬 소재로 장시간 앉아 있어도 편안함을 제공합니다.
+
+• 획기적인 PostureFit SL 요추 지지 시스템
+• 12가지 조절 포인트로 개인 맞춤 설정
+• 12년 무상 A/S 보장"
+            />
+          </div>
+
+          {/* 개요 이미지 업로드 */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              개요 이미지
+              <span className="text-muted-foreground ml-2">(상품 개요와 함께 표시될 이미지들)</span>
+            </label>
+            
+            <div className="border-2 border-dashed border-border rounded-lg p-6">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={async (e) => {
+                  const files = e.target.files;
+                  if (!files) return;
+
+                  try {
+                    console.log('개요 이미지 업로드 시작:', files.length, '개 파일');
+                    
+                    const uploadPromises = Array.from(files).map(async (file) => {
+                      try {
+                        const result = await uploadToCloudinary(file, 'furniture/overview');
+                        return {
+                          id: result.public_id,
+                          url: result.secure_url,
+                          alt: file.name.replace(/\.[^/.]+$/, ''),
+                          caption: ''
+                        };
+                      } catch (error) {
+                        console.error(`파일 ${file.name} 업로드 실패:`, error);
+                        alert(`파일 ${file.name} 업로드에 실패했습니다.`);
+                        return null;
+                      }
+                    });
+
+                    const uploadedImages = (await Promise.all(uploadPromises)).filter(Boolean);
+                    
+                    if (uploadedImages.length > 0) {
+                      handleInputChange('overviewImages', [...form.overviewImages, ...uploadedImages]);
+                      console.log('개요 이미지 업로드 완료:', uploadedImages.length, '개');
+                    }
+                  } catch (error) {
+                    console.error('업로드 중 오류:', error);
+                    alert('이미지 업로드 중 오류가 발생했습니다.');
+                  }
+                }}
+                className="hidden"
+                id="overview-image-upload"
+              />
+              
+              <label
+                htmlFor="overview-image-upload"
+                className="flex flex-col items-center justify-center cursor-pointer"
+              >
+                <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                <span className="text-sm text-muted-foreground text-center">
+                  클릭하여 개요 이미지를 업로드하거나<br />
+                  파일을 여기로 드래그 앤 드롭하세요
+                </span>
+                <span className="text-xs text-muted-foreground mt-1">
+                  JPG, PNG, WebP (최대 5MB)
+                </span>
+              </label>
+            </div>
+
+            {/* 업로드된 개요 이미지 목록 */}
+            {form.overviewImages.length > 0 && (
+              <div className="mt-4 space-y-3">
+                {form.overviewImages.map((image, index) => (
+                  <div key={image.id} className="flex items-center space-x-4 p-3 border rounded-lg">
+                    <div className="relative w-16 h-16 flex-shrink-0">
+                      <Image
+                        src={image.url}
+                        alt={image.alt || `개요 이미지 ${index + 1}`}
+                        fill
+                        className="object-cover rounded"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={image.alt || ''}
+                        onChange={(e) => {
+                          const newImages = [...form.overviewImages];
+                          newImages[index] = { ...newImages[index], alt: e.target.value };
+                          handleInputChange('overviewImages', newImages);
+                        }}
+                        className="w-full p-2 text-sm border rounded focus:ring-2 focus:ring-primary"
+                        placeholder="이미지 설명 (선택사항)"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newImages = form.overviewImages.filter((_, i) => i !== index);
+                        handleInputChange('overviewImages', newImages);
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-100 rounded"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 미리보기 섹션 */}
+      {(form.overviewDescription || form.overviewImages.length > 0) && (
+        <div className="bg-muted rounded-lg border p-6">
+          <h3 className="text-lg font-medium mb-4 flex items-center space-x-2">
+            <Eye className="w-5 h-5" />
+            <span>상품 개요 미리보기</span>
+          </h3>
+          
+          <div className="bg-background rounded-lg p-6 border">
+            <h4 className="text-xl font-medium mb-4">상품 개요</h4>
+            
+            {form.overviewDescription && (
+              <div className="mb-6">
+                <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {form.overviewDescription}
+                </div>
+              </div>
+            )}
+            
+            {form.overviewImages.length > 0 && (
+              <div className="space-y-4">
+                {form.overviewImages.map((image, index) => (
+                  <div key={image.id} className="relative">
+                    <div className="relative rounded-lg overflow-hidden bg-muted">
+                      <Image
+                        src={image.url}
+                        alt={image.alt || `개요 이미지 ${index + 1}`}
+                        width={800}
+                        height={0}
+                        className="w-full h-auto object-contain"
+                      />
+                    </div>
+                    {image.alt && (
+                      <p className="text-sm text-muted-foreground mt-2 text-center">
+                        {image.alt}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 기존 간단 설명 (하위 호환성을 위해 유지) */}
+      <div className="bg-card rounded-lg border p-6">
+        <h3 className="text-lg font-medium mb-4">💬 간단 설명</h3>
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            기본 설명
+            <span className="text-muted-foreground ml-2">(검색 및 목록에서 사용되는 간단한 설명)</span>
+          </label>
+          <textarea
+            value={form.description}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+            className="w-full p-4 border rounded-lg focus:ring-2 focus:ring-primary"
+            rows={3}
+            placeholder="상품의 핵심 특징을 한두 줄로 간단히 설명해주세요..."
+          />
+        </div>
+      </div>
+    </div>
   );
 
   const renderImagesSection = () => (
@@ -753,6 +1006,128 @@ export default function EditProductPage() {
           </div>
         ))}
       </div>
+    </div>
+  );
+
+  const renderRelatedProductsSection = () => (
+    <div className="space-y-6">
+      {/* 검색 섹션 */}
+      <div className="bg-card rounded-lg border p-6">
+        <h3 className="text-lg font-medium mb-4 flex items-center space-x-2">
+          <Link2 className="w-5 h-5" />
+          <span>연계 상품 검색</span>
+        </h3>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 카테고리 선택 */}
+            <div>
+              <label className="block text-sm font-medium mb-2">카테고리</label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
+              >
+                <option value="">전체 카테고리</option>
+                {categories.map(category => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {/* 검색어 입력 */}
+            <div>
+              <label className="block text-sm font-medium mb-2">검색어</label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && searchRelatedProducts()}
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
+                placeholder="상품명, 브랜드로 검색..."
+              />
+            </div>
+            
+            {/* 검색 버튼 */}
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={searchRelatedProducts}
+                disabled={isSearching || (!searchTerm.trim() && !selectedCategory)}
+                className="w-full bg-primary text-primary-foreground px-4 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+              >
+                <Search className="w-4 h-4" />
+                <span>{isSearching ? '검색 중...' : '검색'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 검색 결과 */}
+      {searchResults.length > 0 && (
+        <div className="bg-card rounded-lg border p-6">
+          <h4 className="text-md font-medium mb-4">검색 결과 ({searchResults.length}개)</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+            {searchResults.map((product) => (
+              <div
+                key={product.id}
+                className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="relative w-full h-24 bg-muted rounded mb-3">
+                  <Image
+                    src={product.images[0] || '/placeholder-product.jpg'}
+                    alt={product.name}
+                    fill
+                    className="object-cover rounded"
+                  />
+                </div>
+                <h5 className="font-medium text-sm mb-1 line-clamp-2">{product.name}</h5>
+                <p className="text-xs text-muted-foreground mb-2">{product.brand}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">
+                    {product.salePrice.toLocaleString()}원
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => addRelatedProduct(product.id)}
+                    disabled={form.relatedProducts.includes(product.id)}
+                    className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {form.relatedProducts.includes(product.id) ? '선택됨' : '선택'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 선택된 연계 상품 목록 */}
+      {form.relatedProducts.length > 0 && (
+        <div className="bg-card rounded-lg border p-6">
+          <h4 className="text-md font-medium mb-4">선택된 연계 상품 ({form.relatedProducts.length}개)</h4>
+          <div className="space-y-3">
+            {form.relatedProducts.map((productId) => (
+              <div key={productId} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-muted rounded"></div>
+                  <span className="text-sm font-medium">상품 ID: {productId}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeRelatedProduct(productId)}
+                  className="text-red-500 hover:bg-red-100 p-2 rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -941,6 +1316,7 @@ export default function EditProductPage() {
           {currentTab === 'condition' && renderConditionSection()}
           {currentTab === 'specifications' && renderSpecificationsSection()}
           {currentTab === 'images' && renderImagesSection()}
+          {currentTab === 'related' && renderRelatedProductsSection()}
           {currentTab === 'source' && renderSourceSection()}
         </motion.div>
       </div>

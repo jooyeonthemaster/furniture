@@ -44,6 +44,9 @@ export interface Product {
   category: ProductCategory;
   subcategory?: string;
   description: string;
+  // 상품 개요 관련 필드 추가
+  overviewDescription?: string; // 구조적인 개요 설명
+  overviewImages?: string[];     // 개요 전용 이미지들
   originalPrice: number;
   salePrice: number;
   discount: number;
@@ -62,6 +65,8 @@ export interface Product {
   source: ProductSource;
   sourceDetails?: string;
   tags: string[];
+  // 연계 상품 추천 기능
+  relatedProducts?: string[]; // 연계 상품 ID 배열
   createdAt: Date;
   updatedAt: Date;
   views: number;

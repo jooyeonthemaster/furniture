@@ -9,29 +9,47 @@ import {
   Star, Heart, Share2, ArrowLeft, ShoppingBag, Phone, MessageCircle,
   Ruler, Package, Truck, Shield, Award, MapPin, Calendar, Eye,
   ChevronLeft, ChevronRight, Zap, CheckCircle, AlertTriangle,
-  Info, Clock, Users, TrendingUp, Download
+  Info, Clock, Users, TrendingUp, Download, Plus
 } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/hooks/useAuth';
-import { getProductById } from '@/lib/products';
+import { useCart } from '@/hooks/useCart';
+import { getProductById, getRelatedProducts } from '@/lib/products';
 import { Product } from '@/types';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { addItem, getItemQuantity } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [relatedLoading, setRelatedLoading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedTab, setSelectedTab] = useState('overview');
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [relatedQuantities, setRelatedQuantities] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const loadProduct = async () => {
       try {
         const productData = await getProductById(params.id as string);
         setProduct(productData);
+        
+        // 연계 상품 로딩
+        if (productData?.relatedProducts && productData.relatedProducts.length > 0) {
+          setRelatedLoading(true);
+          try {
+            const relatedData = await getRelatedProducts(productData.relatedProducts);
+            setRelatedProducts(relatedData);
+          } catch (error) {
+            console.error('연계 상품 로드 실패:', error);
+          } finally {
+            setRelatedLoading(false);
+          }
+        }
       } catch (error) {
         console.error('상품 로드 실패:', error);
       } finally {
@@ -43,6 +61,57 @@ export default function ProductDetailPage() {
       loadProduct();
     }
   }, [params.id]);
+
+  const handleAddToCart = (product: Product, qty: number = 1) => {
+    for (let i = 0; i < qty; i++) {
+      addItem({
+        productId: product.id,
+        name: product.name,
+        brand: product.brand,
+        image: product.images[0] || '',
+        originalPrice: product.originalPrice,
+        salePrice: product.salePrice,
+        maxStock: product.stock,
+      });
+    }
+    alert(`${product.name} ${qty}개가 장바구니에 추가되었습니다!`);
+  };
+
+  const updateRelatedQuantity = (productId: string, newQuantity: number) => {
+    setRelatedQuantities(prev => ({
+      ...prev,
+      [productId]: Math.max(0, newQuantity)
+    }));
+  };
+
+  const calculateTotalPrice = () => {
+    let total = (product?.salePrice || 0) * quantity;
+    
+    relatedProducts.forEach(relatedProduct => {
+      const qty = relatedQuantities[relatedProduct.id] || 0;
+      total += relatedProduct.salePrice * qty;
+    });
+    
+    return total;
+  };
+
+  const getSelectedRelatedProducts = () => {
+    return relatedProducts.filter(p => (relatedQuantities[p.id] || 0) > 0);
+  };
+
+  const addAllToCart = () => {
+    // 메인 상품 추가
+    handleAddToCart(product!, quantity);
+    
+    // 선택된 연계 상품들 추가
+    const selectedRelated = getSelectedRelatedProducts();
+    selectedRelated.forEach(relatedProduct => {
+      const qty = relatedQuantities[relatedProduct.id];
+      handleAddToCart(relatedProduct, qty);
+    });
+
+    alert(`총 ${selectedRelated.length + 1}개 상품이 장바구니에 추가되었습니다!`);
+  };
 
   if (loading) {
     return (
@@ -234,9 +303,12 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div className="flex space-x-3">
-                  <button className="flex-1 bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center space-x-2">
+                  <button 
+                    onClick={() => handleAddToCart(product)}
+                    className="flex-1 bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center space-x-2"
+                  >
                     <ShoppingBag className="w-5 h-5" />
-                    <span>장바구니</span>
+                    <span>장바구니 {getItemQuantity(product?.id || '') > 0 && `(${getItemQuantity(product?.id || '')})`}</span>
                   </button>
                   <button
                     onClick={() => setIsWishlisted(!isWishlisted)}
@@ -276,6 +348,177 @@ export default function ProductDetailPage() {
               <p className="text-sm text-muted-foreground">설치 서비스 별도 문의</p>
             </div>
           </div>
+
+          {/* 연계 상품 섹션 - 통합 */}
+          {relatedProducts.length > 0 && (
+            <div className="lg:col-span-2 space-y-6 pt-8 border-t">
+              <div className="text-center">
+                <h2 className="text-2xl font-light mb-2">함께 구매하면 좋은 상품</h2>
+                <p className="text-muted-foreground">이 상품과 잘 어울리는 추천 상품들입니다</p>
+              </div>
+
+              {relatedLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {relatedProducts.map((relatedProduct) => (
+                    <motion.div
+                      key={relatedProduct.id}
+                      className="group bg-background border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
+                      whileHover={{ y: -4 }}
+                    >
+                      <Link href={`/products/${relatedProduct.id}`} className="block">
+                        <div className="relative aspect-square bg-muted">
+                          <Image
+                            src={relatedProduct.images[0] || '/placeholder-image.jpg'}
+                            alt={relatedProduct.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          {/* 할인 배지 */}
+                          {relatedProduct.originalPrice > relatedProduct.salePrice && (
+                            <div className="absolute top-2 left-2">
+                              <span className="bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">
+                                {Math.round(((relatedProduct.originalPrice - relatedProduct.salePrice) / relatedProduct.originalPrice) * 100)}% 할인
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+
+                      <div className="p-4 space-y-3">
+                        <Link href={`/products/${relatedProduct.id}`}>
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">{relatedProduct.brand}</p>
+                            <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                              {relatedProduct.name}
+                            </h3>
+                          </div>
+                        </Link>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-lg font-bold text-red-600">
+                              {relatedProduct.salePrice.toLocaleString()}원
+                            </span>
+                            {relatedProduct.originalPrice > relatedProduct.salePrice && (
+                              <span className="text-sm text-muted-foreground line-through">
+                                {relatedProduct.originalPrice.toLocaleString()}원
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 수량 선택 */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center border border-border rounded-lg">
+                            <button
+                              onClick={() => updateRelatedQuantity(relatedProduct.id, (relatedQuantities[relatedProduct.id] || 0) - 1)}
+                              className="px-2 py-1 hover:bg-muted transition-colors text-sm"
+                            >
+                              -
+                            </button>
+                            <span className="px-3 py-1 border-x border-border text-sm">
+                              {relatedQuantities[relatedProduct.id] || 0}
+                            </span>
+                            <button
+                              onClick={() => updateRelatedQuantity(relatedProduct.id, (relatedQuantities[relatedProduct.id] || 0) + 1)}
+                              className="px-2 py-1 hover:bg-muted transition-colors text-sm"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => handleAddToCart(relatedProduct, relatedQuantities[relatedProduct.id] || 1)}
+                            disabled={!relatedQuantities[relatedProduct.id]}
+                            className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>추가</span>
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 총 금액 계산 섹션 */}
+          {(relatedProducts.length > 0 && (getSelectedRelatedProducts().length > 0 || quantity > 0)) && (
+            <div className="lg:col-span-2 mt-8 p-6 bg-muted rounded-lg border">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">주문 요약</h3>
+                
+                {/* 메인 상품 */}
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <div className="flex items-center space-x-3">
+                    <div className="relative w-12 h-12 rounded overflow-hidden">
+                      <Image
+                        src={product?.images[0] || '/placeholder-image.jpg'}
+                        alt={product?.name || ''}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{product?.name}</p>
+                      <p className="text-xs text-muted-foreground">수량: {quantity}</p>
+                    </div>
+                  </div>
+                  <span className="font-medium">
+                    {((product?.salePrice || 0) * quantity).toLocaleString()}원
+                  </span>
+                </div>
+
+                {/* 선택된 연계 상품들 */}
+                {getSelectedRelatedProducts().map((relatedProduct) => (
+                  <div key={relatedProduct.id} className="flex justify-between items-center py-2 border-b border-border">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative w-12 h-12 rounded overflow-hidden">
+                        <Image
+                          src={relatedProduct.images[0] || '/placeholder-image.jpg'}
+                          alt={relatedProduct.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{relatedProduct.name}</p>
+                        <p className="text-xs text-muted-foreground">수량: {relatedQuantities[relatedProduct.id]}</p>
+                      </div>
+                    </div>
+                    <span className="font-medium">
+                      {(relatedProduct.salePrice * relatedQuantities[relatedProduct.id]).toLocaleString()}원
+                    </span>
+                  </div>
+                ))}
+
+                {/* 총 금액 */}
+                <div className="flex justify-between items-center pt-4 border-t-2 border-foreground">
+                  <span className="text-lg font-bold">총 금액</span>
+                  <span className="text-xl font-bold text-red-600">
+                    {calculateTotalPrice().toLocaleString()}원
+                  </span>
+                </div>
+
+                {/* 일괄 장바구니 추가 버튼 */}
+                <button
+                  onClick={addAllToCart}
+                  className="w-full bg-foreground text-background py-3 rounded-lg font-medium hover:bg-foreground/90 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  <span>
+                    전체 상품 장바구니에 추가 
+                    ({1 + getSelectedRelatedProducts().length}개 상품)
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -307,10 +550,44 @@ export default function ProductDetailPage() {
             {selectedTab === 'overview' && (
               <div className="prose max-w-none">
                 <h3 className="text-xl font-medium mb-4">상품 개요</h3>
-                {product.description ? (
-                  <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+                
+                {/* 구조적 개요 표시 (새로운 방식) */}
+                {product.overviewDescription || product.overviewImages?.length ? (
+                  <div className="space-y-6">
+                    {/* 개요 설명 */}
+                    {product.overviewDescription && (
+                      <div className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                        {product.overviewDescription}
+                      </div>
+                    )}
+                    
+                    {/* 개요 이미지들 - 세로로 표시 */}
+                    {product.overviewImages && product.overviewImages.length > 0 && (
+                      <div className="space-y-4">
+                        {product.overviewImages.map((imageUrl, index) => (
+                          <div key={index} className="relative">
+                            <div className="relative rounded-lg overflow-hidden bg-muted">
+                              <Image
+                                src={imageUrl}
+                                alt={`${product.name} 개요 이미지 ${index + 1}`}
+                                width={800}
+                                height={0}
+                                className="w-full h-auto object-contain"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <p className="text-muted-foreground">상품 설명이 등록되지 않았습니다.</p>
+                  /* 기존 방식 (하위 호환성) */
+                  product.description ? (
+                    <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+                  ) : (
+                    <p className="text-muted-foreground">상품 설명이 등록되지 않았습니다.</p>
+                  )
                 )}
               </div>
             )}
@@ -368,6 +645,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </section>
+
+
     </PageLayout>
   );
 } 
