@@ -43,6 +43,8 @@ export interface Product {
   designer?: string;
   category: ProductCategory;
   subcategory?: string;
+  model?: string;
+  sku?: string;
   description: string;
   // 상품 개요 관련 필드 추가
   overviewDescription?: string; // 구조적인 개요 설명
@@ -51,6 +53,7 @@ export interface Product {
   salePrice: number;
   discount: number;
   condition: ProductCondition;
+  availability?: 'in_stock' | 'out_of_stock' | 'discontinued';
   images: string[];
   dimensions?: {
     width: number;
@@ -64,23 +67,67 @@ export interface Product {
   featured: boolean;
   source: ProductSource;
   sourceDetails?: string;
+  sourceLocation?: string;
+  sourceDate?: string;
+  sourceUsage?: string;
   tags: string[];
   // 연계 상품 추천 기능
   relatedProducts?: string[]; // 연계 상품 ID 배열
+  // 상세 설명
+  detailedDescription?: {
+    overview: string;
+    targetUsers: string[];
+    suitableSpaces: string[];
+    designStory: string;
+  };
+  // 상태 리포트
+  conditionReport?: {
+    overall: string;
+    details: Array<{
+      item: string;
+      condition: string;
+      note: string;
+    }>;
+    minorFlaws: string[];
+    strengths: string[];
+  };
+  // 사용 가이드
+  usageGuide?: {
+    setup: string[];
+    maintenance: string[];
+    tips: string[];
+  };
+  // 제품 사양
+  specifications?: {
+    weight?: string;
+    maxWeight?: string;
+    origin?: string;
+    year?: string;
+  };
+  // 배송 정보
+  shipping?: {
+    free: boolean;
+    period: string;
+    installation: boolean;
+    installationFee: number;
+  };
   createdAt: Date;
   updatedAt: Date;
   views: number;
   likes: number;
+  rating?: number;
 }
 
 export type ProductCategory = 
-  | 'seating'
-  | 'tables'
-  | 'storage'
+  | 'new'
+  | 'furniture'
   | 'lighting'
-  | 'decor'
-  | 'rugs'
-  | 'outdoor';
+  | 'kitchen'
+  | 'accessories'
+  | 'textile'
+  | 'kids'
+  | 'book'
+  | 'sale';
 
 export type ProductCondition = 
   | 'new'

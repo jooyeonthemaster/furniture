@@ -5,7 +5,8 @@ import { motion, Reorder } from 'framer-motion';
 import Image from 'next/image';
 import { 
   Upload, X, Star, Eye, Move, Image as ImageIcon, 
-  Download, Trash2, RotateCw, Crop, Edit3, CheckCircle, AlertCircle
+  Download, Trash2, RotateCw, Crop, Edit3, CheckCircle, AlertCircle,
+  GripVertical, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 interface ImageItem {
@@ -41,6 +42,7 @@ export default function ImageUploader({
   const [imageAlt, setImageAlt] = useState('');
   const [imageCaption, setImageCaption] = useState('');
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const uploadToCloudinary = async (file: File): Promise<ImageItem | null> => {
@@ -213,7 +215,26 @@ export default function ImageUploader({
   };
 
   const handleReorder = (newImages: ImageItem[]) => {
-    onImagesChange(newImages);
+    // 첫 번째 이미지를 자동으로 대표 이미지로 설정
+    const reorderedImages = newImages.map((img, index) => ({
+      ...img,
+      isPrimary: index === 0
+    }));
+    onImagesChange(reorderedImages);
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return;
+    const newImages = [...images];
+    [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
+    handleReorder(newImages);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index === images.length - 1) return;
+    const newImages = [...images];
+    [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
+    handleReorder(newImages);
   };
 
   const handleEditImage = (image: ImageItem) => {
@@ -340,8 +361,9 @@ export default function ImageUploader({
             <h3 className="text-sm font-medium">
               업로드된 이미지 ({images.length}/{maxImages})
             </h3>
-            <div className="text-xs text-muted-foreground">
-              드래그하여 순서 변경
+            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+              <GripVertical className="w-4 h-4" />
+              <span>드래그하여 순서 변경 • 첫 번째 이미지가 대표 이미지로 설정됩니다</span>
             </div>
           </div>
 
@@ -351,25 +373,56 @@ export default function ImageUploader({
             onReorder={handleReorder}
             className="space-y-3"
           >
-            {images.map((image) => (
+            {images.map((image, index) => (
               <Reorder.Item
                 key={image.id}
                 value={image}
-                className="bg-muted/30 rounded-lg p-4 cursor-move"
+                dragListener={false}
+                className="bg-card border rounded-lg overflow-hidden"
+                onDragStart={() => setDraggedItem(image.id)}
+                onDragEnd={() => setDraggedItem(null)}
               >
-                <div className="flex items-center space-x-4">
+                <div className={`flex items-center p-4 transition-all duration-200 ${
+                  draggedItem === image.id ? 'bg-primary/5 shadow-lg scale-[1.02]' : 'hover:bg-muted/50'
+                }`}>
+                  {/* 드래그 핸들 */}
+                  <div 
+                    className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted rounded mr-3"
+                    onPointerDown={(e) => {
+                      (e.target as HTMLElement).closest('[data-framer-name="reorder-item"]')?.dispatchEvent(
+                        new PointerEvent('pointerdown', { pointerId: e.pointerId, bubbles: true })
+                      );
+                    }}
+                  >
+                    <GripVertical className="w-5 h-5 text-muted-foreground" />
+                  </div>
+
+                  {/* 순서 번호 */}
+                  <div className="flex flex-col items-center mr-4">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      index === 0 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    {index === 0 && (
+                      <span className="text-xs text-primary font-medium mt-1">대표</span>
+                    )}
+                  </div>
+
                   {/* 이미지 미리보기 */}
-                  <div className="relative">
+                  <div className="relative mr-4">
                     <Image
                       src={image.url}
                       alt={image.alt || '상품 이미지'}
                       width={80}
                       height={80}
-                      className="rounded-lg object-cover"
+                      className="rounded-lg object-cover border-2 border-transparent"
                     />
                     {image.isPrimary && (
                       <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full p-1">
-                        <Star className="w-3 h-3" />
+                        <Star className="w-3 h-3 fill-current" />
                       </div>
                     )}
                   </div>
@@ -383,6 +436,26 @@ export default function ImageUploader({
                     <div className="text-xs text-muted-foreground">
                       Public ID: {image.publicId}
                     </div>
+                  </div>
+
+                  {/* 순서 변경 버튼들 */}
+                  <div className="flex flex-col space-y-1 mr-4">
+                    <button
+                      onClick={() => handleMoveUp(index)}
+                      disabled={index === 0}
+                      className="p-1 hover:bg-muted rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="위로 이동"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleMoveDown(index)}
+                      disabled={index === images.length - 1}
+                      className="p-1 hover:bg-muted rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="아래로 이동"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
                   </div>
 
                   {/* 액션 버튼들 */}
@@ -417,6 +490,17 @@ export default function ImageUploader({
               </Reorder.Item>
             ))}
           </Reorder.Group>
+
+          {/* 순서 변경 안내 */}
+          {images.length > 1 && (
+            <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 flex items-center space-x-2">
+              <Move className="w-4 h-4" />
+              <span>
+                <strong>팁:</strong> 첫 번째 이미지가 자동으로 대표 이미지로 설정됩니다. 
+                드래그하거나 화살표 버튼으로 순서를 변경하세요.
+              </span>
+            </div>
+          )}
         </div>
       )}
 

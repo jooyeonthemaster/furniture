@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import SectionParser from '@/components/admin/SectionParser';
 import ImageUploader from '@/components/admin/ImageUploader';
+import OverviewImageUploader from '@/components/admin/OverviewImageUploader';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 
 interface ProductForm {
@@ -70,7 +71,6 @@ interface ProductForm {
     maxWeight: string;
     material: string;
     color: string;
-    warranty: string;
     origin: string;
     year: string;
   };
@@ -109,7 +109,7 @@ interface ProductForm {
 const initialForm: ProductForm = {
   name: '',
   brand: '',
-  category: 'seating',
+  category: 'furniture',
   subcategory: '',
   model: '',
   sku: '',
@@ -145,7 +145,7 @@ const initialForm: ProductForm = {
     maxWeight: '',
     material: '',
     color: '',
-    warranty: '',
+
     origin: '',
     year: ''
   },
@@ -168,15 +168,7 @@ const initialForm: ProductForm = {
   }
 };
 
-const categories = [
-  { value: 'furniture', label: 'Furniture' },
-  { value: 'lighting', label: 'Lighting' },
-  { value: 'kitchen', label: 'Kitchen' },
-  { value: 'accessories', label: 'Accessories' },
-  { value: 'textile', label: 'Textile' },
-  { value: 'kids', label: 'Kids' },
-  { value: 'book', label: 'Book' }
-];
+
 
 const conditions = [
   { value: 'new', label: '신품' },
@@ -394,9 +386,15 @@ export default function AddProductPage() {
             onChange={(e) => handleInputChange('category', e.target.value)}
             className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
           >
-            {categories.map(cat => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
+            <option value="new">New</option>
+            <option value="furniture">Furniture</option>
+            <option value="lighting">Lighting</option>
+            <option value="kitchen">Kitchen</option>
+            <option value="accessories">Accessories</option>
+            <option value="textile">Textile</option>
+            <option value="kids">Kids</option>
+            <option value="book">Book</option>
+            <option value="sale">Sale</option>
           </select>
         </div>
         <div>
@@ -593,104 +591,12 @@ Herman Miller Aeron Chair는 1994년 출시 이후 전 세계 오피스 가구�
               <span className="text-muted-foreground ml-2">(상품 개요와 함께 표시될 이미지들)</span>
             </label>
             
-            <div className="border-2 border-dashed border-border rounded-lg p-6">
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={async (e) => {
-                  const files = e.target.files;
-                  if (!files) return;
-
-                  try {
-                    console.log('개요 이미지 업로드 시작:', files.length, '개 파일');
-                    
-                    const uploadPromises = Array.from(files).map(async (file) => {
-                      try {
-                        const result = await uploadToCloudinary(file, 'furniture/overview');
-                        return {
-                          id: result.public_id,
-                          url: result.secure_url,
-                          alt: file.name.replace(/\.[^/.]+$/, ''),
-                          caption: ''
-                        };
-                      } catch (error) {
-                        console.error(`파일 ${file.name} 업로드 실패:`, error);
-                        alert(`파일 ${file.name} 업로드에 실패했습니다.`);
-                        return null;
-                      }
-                    });
-
-                    const uploadedImages = (await Promise.all(uploadPromises)).filter(Boolean);
-                    
-                    if (uploadedImages.length > 0) {
-                      handleInputChange('overviewImages', [...form.overviewImages, ...uploadedImages]);
-                      console.log('개요 이미지 업로드 완료:', uploadedImages.length, '개');
-                    }
-                  } catch (error) {
-                    console.error('업로드 중 오류:', error);
-                    alert('이미지 업로드 중 오류가 발생했습니다.');
-                  }
-                }}
-                className="hidden"
-                id="overview-image-upload"
-              />
-              
-              <label
-                htmlFor="overview-image-upload"
-                className="flex flex-col items-center justify-center cursor-pointer"
-              >
-                <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                <span className="text-sm text-muted-foreground text-center">
-                  클릭하여 개요 이미지를 업로드하거나<br />
-                  파일을 여기로 드래그 앤 드롭하세요
-                </span>
-                <span className="text-xs text-muted-foreground mt-1">
-                  JPG, PNG, WebP (최대 5MB)
-                </span>
-              </label>
-            </div>
-
-            {/* 업로드된 개요 이미지 목록 */}
-            {form.overviewImages.length > 0 && (
-              <div className="mt-4 space-y-3">
-                {form.overviewImages.map((image, index) => (
-                  <div key={image.id} className="flex items-center space-x-4 p-3 border rounded-lg">
-                    <div className="relative w-16 h-16 flex-shrink-0">
-                      <Image
-                        src={image.url}
-                        alt={image.alt || `개요 이미지 ${index + 1}`}
-                        fill
-                        className="object-cover rounded"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={image.alt || ''}
-                        onChange={(e) => {
-                          const newImages = [...form.overviewImages];
-                          newImages[index] = { ...newImages[index], alt: e.target.value };
-                          handleInputChange('overviewImages', newImages);
-                        }}
-                        className="w-full p-2 text-sm border rounded focus:ring-2 focus:ring-primary"
-                        placeholder="이미지 설명 (선택사항)"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newImages = form.overviewImages.filter((_, i) => i !== index);
-                        handleInputChange('overviewImages', newImages);
-                      }}
-                      className="p-2 text-red-500 hover:bg-red-100 rounded"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <OverviewImageUploader
+              images={form.overviewImages}
+              onImagesChange={(images) => handleInputChange('overviewImages', images)}
+              maxImages={10}
+              maxFileSize={5}
+            />
           </div>
         </div>
       </div>
@@ -930,7 +836,7 @@ Herman Miller Aeron Chair는 1994년 출시 이후 전 세계 오피스 가구�
                key === 'maxWeight' ? '최대 하중' :
                key === 'material' ? '소재' :
                key === 'color' ? '색상' :
-               key === 'warranty' ? '보증 기간' :
+
                key === 'origin' ? '원산지' :
                key === 'year' ? '제조년도' : key}
             </label>
@@ -945,7 +851,7 @@ Herman Miller Aeron Chair는 1994년 출시 이후 전 세계 오피스 가구�
                 key === 'maxWeight' ? '예: 136kg' :
                 key === 'material' ? '예: 8Z 펠리클 메쉬, 알루미늄' :
                 key === 'color' ? '예: 차콜' :
-                key === 'warranty' ? '예: 12년' :
+
                 key === 'origin' ? '예: 미국' :
                 key === 'year' ? '예: 2023' : ''
               }

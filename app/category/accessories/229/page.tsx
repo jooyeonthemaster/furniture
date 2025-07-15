@@ -22,7 +22,7 @@ export default function AccessoriesPage() {
         const allProducts = await getAllProducts();
         // 액세서리 관련 상품들 필터링
         const accessoryProducts = allProducts.filter(product => 
-          product.category === 'decor' || 
+          product.category === 'accessories' || 
           product.name.includes('액세서리') || 
           product.name.includes('화병') || 
           product.name.includes('거울') ||

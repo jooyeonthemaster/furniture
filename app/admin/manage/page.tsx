@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getAllProducts, deleteProduct } from '@/lib/products';
 import { Product } from '@/types';
+import CategoryFilter from '@/components/admin/CategoryFilter';
 
 // 임시 상품 데이터
 const mockProducts = [
@@ -77,15 +78,7 @@ const statusOptions = [
   { value: 'sold', label: '판매 완료' }
 ];
 
-const categoryOptions = [
-  { value: 'all', label: '전체 카테고리' },
-  { value: '의자', label: '의자' },
-  { value: '소파', label: '소파' },
-  { value: '테이블', label: '테이블' },
-  { value: '수납', label: '수납가구' },
-  { value: '조명', label: '조명' },
-  { value: '기타', label: '기타' }
-];
+
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -118,7 +111,26 @@ export default function AdminProductsPage() {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.brand.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'all'; // Product 타입에 status 없음, 임시로 모든 상품 표시
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    
+    // 카테고리 매칭 로직 개선
+    let matchesCategory = selectedCategory === 'all';
+    if (!matchesCategory && selectedCategory) {
+      // 직접 매칭
+      matchesCategory = product.category === selectedCategory;
+      
+      // 레거시 카테고리 매핑
+      if (!matchesCategory) {
+        const legacyMapping: Record<string, string[]> = {
+          'furniture': ['seating', 'tables', 'storage', '의자', '소파', '테이블', '수납'],
+          'lighting': ['조명'],
+          'accessories': ['decor', '기타'],
+          'textile': ['rugs']
+        };
+        
+        const legacyCategories = legacyMapping[selectedCategory] || [];
+        matchesCategory = legacyCategories.includes(product.category);
+      }
+    }
     
     return matchesSearch && matchesStatus && matchesCategory;
   });
@@ -248,51 +260,49 @@ export default function AdminProductsPage() {
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="bg-background border rounded-lg p-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="상품명 또는 브랜드 검색..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-              />
+      {/* Search and Filters */}
+      <div className="space-y-4">
+        {/* 검색바 */}
+        <div className="bg-background border rounded-lg p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="상품명 또는 브랜드 검색..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+                />
+              </div>
             </div>
-          </div>
-          
-          <div className="flex gap-3">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-            >
-              {statusOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
             
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-            >
-              {categoryOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-3">
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
+              >
+                {statusOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
+        {/* 카테고리 필터 */}
+        <CategoryFilter
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+        />
+
+        {/* 선택된 상품 액션 바 */}
         {selectedProducts.length > 0 && (
-          <div className="flex items-center justify-between mt-4 p-3 bg-primary/10 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
             <span className="text-sm">
               {selectedProducts.length}개 상품이 선택됨
             </span>

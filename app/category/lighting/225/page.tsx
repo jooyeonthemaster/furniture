@@ -4,31 +4,32 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Grid3X3, List, Lightbulb } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
+import ProductFilter from '@/components/features/ProductFilter';
 import { getAllProducts } from '@/lib/products';
 import { Product } from '@/types';
 
 export default function LightingPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState('인기순');
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const allProducts = await getAllProducts();
+        const products = await getAllProducts();
         // 조명 관련 상품들 필터링
-        const lightingProducts = allProducts.filter(product => 
-          product.category === 'lighting' || 
+        const lightingProducts = products.filter(product => 
+          product.category === 'lighting' ||
+          // 레거시 카테고리 지원
+          (product.category as string) === 'lighting' ||
           product.name.includes('조명') || 
           product.name.includes('램프') || 
           product.name.includes('라이트') ||
-          product.name.includes('펜던트')
+          product.name.includes('스탠드')
         );
-        setProducts(lightingProducts);
+        setAllProducts(lightingProducts);
         setFilteredProducts(lightingProducts);
       } catch (error) {
         console.error('상품 로드 실패:', error);
@@ -58,14 +59,6 @@ export default function LightingPage() {
       {/* Hero Section */}
       <section className="py-16 xs:py-12 px-4 bg-gradient-to-b from-secondary to-background">
         <div className="container mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center justify-center mb-6"
-          >
-            <Lightbulb className="w-16 h-16 text-yellow-500" />
-          </motion.div>
-          
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -79,58 +72,27 @@ export default function LightingPage() {
             transition={{ delay: 0.1 }}
             className="text-lg xs:text-base opacity-70 max-w-2xl mx-auto"
           >
-            공간의 분위기를 완성하는 디자이너 조명 컬렉션
+            공간을 밝히는 아름다운 조명 컬렉션
           </motion.p>
         </div>
       </section>
 
       {/* Filter Section */}
-      <section className="py-8 px-4 border-b">
-        <div className="container mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium">조명 {filteredProducts.length}개</span>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              {/* View Mode Toggle */}
-              <div className="flex border rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded ${viewMode === 'grid' ? 'bg-foreground text-background' : ''}`}
-                >
-                  <Grid3X3 size={16} />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-foreground text-background' : ''}`}
-                >
-                  <List size={16} />
-                </button>
-              </div>
-
-              {/* Sort */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-border bg-background text-foreground rounded-lg focus:outline-none focus:border-foreground"
-              >
-                <option value="인기순">인기순</option>
-                <option value="가격낮은순">가격 낮은순</option>
-                <option value="가격높은순">가격 높은순</option>
-                <option value="최신순">최신순</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ProductFilter
+        products={allProducts}
+        onFilteredProductsChange={setFilteredProducts}
+        onViewModeChange={setViewMode}
+        viewMode={viewMode}
+        category="lighting"
+      />
 
       {/* Products Grid */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-lg opacity-60">등록된 조명이 없습니다.</p>
+              <p className="text-lg opacity-60">조건에 맞는 조명이 없습니다.</p>
+              <p className="text-sm opacity-40 mt-2">필터를 조정해보세요.</p>
             </div>
           ) : (
             <div className={`
@@ -147,10 +109,10 @@ export default function LightingPage() {
                   transition={{ delay: index * 0.1 }}
                   className={`
                     group cursor-pointer
-                    ${viewMode === 'list' ? 'flex space-x-6 p-6 border rounded-lg' : ''}
+                    ${viewMode === 'list' ? 'flex space-x-6 p-6 border rounded-lg hover:shadow-md transition-shadow' : ''}
                   `}
                 >
-                  <Link href={`/products/${product.id}`}>
+                  <Link href={`/products/${product.id}`} className="block">
                     <div className={`
                       ${viewMode === 'list' ? 'w-48 h-32 flex-shrink-0' : 'aspect-square mb-4'}
                       relative overflow-hidden rounded-lg
@@ -161,15 +123,60 @@ export default function LightingPage() {
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
+                      
+                      {/* 할인 뱃지 */}
+                      {product.originalPrice && product.originalPrice > product.salePrice && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                          {Math.round((1 - product.salePrice / product.originalPrice) * 100)}% OFF
+                        </div>
+                      )}
+                      
+                      {/* 상태 뱃지 */}
+                      <div className="absolute top-2 left-2">
+                        <span className={`text-xs px-2 py-1 rounded text-white ${
+                          product.condition === 'new' ? 'bg-green-500' :
+                          product.condition === 'like-new' ? 'bg-blue-500' :
+                          product.condition === 'excellent' ? 'bg-yellow-500' :
+                          product.condition === 'good' ? 'bg-orange-500' : 'bg-red-500'
+                        }`}>
+                          {product.condition === 'new' ? '신품' :
+                           product.condition === 'like-new' ? 'A급' :
+                           product.condition === 'excellent' ? 'B급' :
+                           product.condition === 'good' ? 'C급' : 'D급'}
+                        </span>
+                      </div>
                     </div>
                     
                     <div className={viewMode === 'list' ? 'flex-1' : ''}>
-                      <h3 className="font-medium mb-2 group-hover:text-foreground/80 transition-colors">
+                      <h3 className="font-medium mb-2 group-hover:text-foreground/80 transition-colors line-clamp-2">
                         {product.name}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-2">
                         {product.brand}
                       </p>
+                      
+                      {/* 색상 표시 */}
+                      {product.colors && product.colors.length > 0 && (
+                        <div className="flex items-center space-x-1 mb-2">
+                          <span className="text-xs text-muted-foreground">색상:</span>
+                          <div className="flex space-x-1">
+                            {product.colors.slice(0, 3).map((color, colorIndex) => (
+                              <span 
+                                key={colorIndex}
+                                className="text-xs bg-muted px-1.5 py-0.5 rounded capitalize"
+                              >
+                                {color}
+                              </span>
+                            ))}
+                            {product.colors.length > 3 && (
+                              <span className="text-xs text-muted-foreground">
+                                +{product.colors.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           {product.originalPrice && product.originalPrice > product.salePrice && (
@@ -181,11 +188,27 @@ export default function LightingPage() {
                             ₩{product.salePrice.toLocaleString()}
                           </div>
                         </div>
-                        {product.originalPrice && product.originalPrice > product.salePrice && (
-                          <div className="bg-red-500 text-white text-sm px-2 py-1 rounded">
-                            {Math.round((1 - product.salePrice / product.originalPrice) * 100)}% OFF
+                        
+                        {/* 재고 상태 */}
+                        <div className="text-right">
+                          <div className={`text-xs px-2 py-1 rounded ${
+                            product.availability === 'in_stock' && product.stock > 0
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.availability === 'in_stock' && product.stock > 0 
+                              ? `재고 ${product.stock}개` 
+                              : '품절'
+                            }
                           </div>
-                        )}
+                          
+                          {/* 평점 표시 */}
+                          {product.rating && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              ⭐ {product.rating.toFixed(1)}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>
