@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/providers/ClientProviders';
 import type { UserRole } from '@/types';
 
 interface GoogleLoginButtonProps {

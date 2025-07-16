@@ -4,277 +4,277 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { 
-  Minus, Plus, X, ArrowLeft, ShoppingBag, CreditCard, 
-  Truck, Shield, Info, Heart
-} from 'lucide-react';
-import PageLayout from '@/components/layout/PageLayout';
+import { Plus, Minus, Trash2, ShoppingBag, ArrowRight, Heart, Gift } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/providers/ClientProviders';
+import PageLayout from '@/components/layout/PageLayout';
 
 export default function CartPage() {
   const { items, totalAmount, totalItems, updateQuantity, removeItem, clearCart } = useCart();
   const { user } = useAuth();
   const [promoCode, setPromoCode] = useState('');
-  const [promoDiscount, setPromoDiscount] = useState(0);
 
-  const shipping = totalAmount >= 300000 ? 0 : 30000; // 30만원 이상 무료배송
-  const finalTotal = totalAmount + shipping - promoDiscount;
+  // 배송비 계산 (10만원 이상 무료배송)
+  const shippingCost = totalAmount >= 100000 ? 0 : 3000;
+  const finalAmount = totalAmount + shippingCost;
 
-  const handlePromoCode = () => {
-    // 간단한 프로모션 코드 처리
-    if (promoCode === 'WELCOME10') {
-      setPromoDiscount(Math.floor(totalAmount * 0.1));
-    } else if (promoCode === 'SAVE20') {
-      setPromoDiscount(Math.floor(totalAmount * 0.2));
+  const handleQuantityChange = (itemId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeItem(itemId);
     } else {
-      alert('유효하지 않은 프로모션 코드입니다.');
+      updateQuantity(itemId, newQuantity);
     }
   };
 
   if (items.length === 0) {
     return (
       <PageLayout>
-        <div className="min-h-screen flex items-center justify-center px-4">
-          <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
-              <ShoppingBag className="w-24 h-24 mx-auto text-gray-300 mb-4" />
-              <h1 className="text-2xl font-serif font-light mb-2">장바구니가 비어있습니다</h1>
-              <p className="text-gray-600 mb-8">마음에 드는 상품을 장바구니에 담아보세요.</p>
+        <section className="py-16 xs:py-12 px-4">
+          <div className="container mx-auto text-center">
+            <div className="max-w-md mx-auto">
+              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShoppingBag className="w-12 h-12 opacity-60" />
+              </div>
+              <h1 className="text-2xl xs:text-xl font-light mb-4">장바구니가 비어있습니다</h1>
+              <p className="opacity-70 mb-8">원하는 상품을 장바구니에 담아보세요</p>
               <Link 
-                href="/products"
-                className="bg-black text-white px-8 py-3 font-serif hover:bg-gray-800 transition-colors"
+                href="/" 
+                className="inline-block px-8 py-3 bg-foreground text-background hover:opacity-90 transition-opacity"
               >
-                상품 둘러보기
+                쇼핑 계속하기
               </Link>
-            </motion.div>
+            </div>
           </div>
-        </div>
+        </section>
       </PageLayout>
     );
   }
 
   return (
     <PageLayout>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4 max-w-6xl">
-          
-          {/* 헤더 */}
-          <motion.div
+      {/* Hero Section */}
+      <section className="py-16 xs:py-12 px-4 bg-secondary">
+        <div className="container mx-auto text-center">
+          <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="text-4xl xs:text-3xl md:text-5xl font-light mb-4"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <Link href="/products" className="mr-4 p-2 hover:bg-gray-100 rounded-full">
-                  <ArrowLeft className="w-5 h-5" />
-                </Link>
-                <h1 className="text-3xl font-serif font-light">장바구니</h1>
-              </div>
-              <div className="text-sm text-gray-600">
-                {totalItems}개 상품
-              </div>
-            </div>
-          </motion.div>
+            장바구니
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-lg xs:text-base opacity-70"
+          >
+            총 {totalItems}개의 상품이 담겨있습니다
+          </motion.p>
+        </div>
+      </section>
 
+      {/* Cart Content */}
+      <section className="py-16 xs:py-12 px-4">
+        <div className="container mx-auto max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* 상품 목록 */}
+            {/* Cart Items */}
             <div className="lg:col-span-2">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white rounded-lg shadow-sm overflow-hidden"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-serif font-medium">상품 목록</h2>
-                    <button
-                      onClick={clearCart}
-                      className="text-sm text-gray-500 hover:text-red-600 transition-colors"
-                    >
-                      전체 삭제
-                    </button>
-                  </div>
+              <div className="bg-background border rounded-lg p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-medium">장바구니 상품</h2>
+                  <button
+                    onClick={clearCart}
+                    className="text-sm opacity-60 hover:opacity-100 transition-opacity flex items-center space-x-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>전체 삭제</span>
+                  </button>
+                </div>
 
-                  <div className="space-y-6">
-                    {items.map((item) => (
-                      <motion.div
-                        key={item.id}
-                        layout
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className="flex items-center space-x-4 pb-6 border-b border-gray-100 last:border-b-0"
-                      >
-                        {/* 상품 이미지 */}
-                        <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            width={96}
-                            height={96}
-                            className="w-full h-full object-cover"
-                          />
+                <div className="space-y-6">
+                  {items.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center space-x-4 p-4 border rounded-lg"
+                    >
+                      <div className="w-20 h-20 bg-muted rounded overflow-hidden">
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          width={80}
+                          height={80}
+                          className="object-cover"
+                        />
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="text-xs opacity-60 mb-1">{item.brand}</p>
+                            <h3 className="font-medium text-sm">{item.name}</h3>
+                          </div>
+                          <button
+                            onClick={() => removeItem(item.productId)}
+                            className="p-1 hover:bg-muted rounded transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4 opacity-60" />
+                          </button>
                         </div>
 
-                        {/* 상품 정보 */}
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs text-gray-500 mb-1">{item.brand}</div>
-                          <h3 className="font-medium text-gray-900 mb-2 truncate">{item.name}</h3>
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
-                            <span className="font-semibold text-lg">{item.salePrice.toLocaleString()}원</span>
+                            <span className="font-medium">{item.salePrice.toLocaleString()}원</span>
                             {item.originalPrice > item.salePrice && (
-                              <>
-                                <span className="text-sm text-gray-500 line-through">
-                                  {item.originalPrice.toLocaleString()}원
-                                </span>
-                                <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                                  {Math.round((1 - item.salePrice / item.originalPrice) * 100)}%
-                                </span>
-                              </>
+                              <span className="text-xs opacity-60 line-through">
+                                {item.originalPrice.toLocaleString()}원
+                              </span>
                             )}
                           </div>
-                        </div>
 
-                        {/* 수량 조절 */}
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center border border-gray-200 rounded-lg">
+                          <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                              className="p-2 hover:bg-gray-50 transition-colors"
-                              disabled={item.quantity <= 1}
+                              onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                              className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-muted transition-colors"
                             >
                               <Minus className="w-4 h-4" />
                             </button>
-                            <span className="px-4 py-2 text-sm font-medium border-x border-gray-200">
-                              {item.quantity}
-                            </span>
+                            <span className="w-8 text-center text-sm">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                              className="p-2 hover:bg-gray-50 transition-colors"
+                              onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                              className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-muted transition-colors"
                               disabled={item.quantity >= item.maxStock}
                             >
                               <Plus className="w-4 h-4" />
                             </button>
                           </div>
-
-                          {/* 삭제 버튼 */}
-                          <button
-                            onClick={() => removeItem(item.productId)}
-                            className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
+
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-xs opacity-60">
+                            소계: {(item.salePrice * item.quantity).toLocaleString()}원
+                          </span>
+                          {item.quantity >= item.maxStock && (
+                            <span className="text-xs text-red-600">최대 수량입니다</span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              </motion.div>
+              </div>
             </div>
 
-            {/* 주문 요약 */}
+            {/* Order Summary */}
             <div className="lg:col-span-1">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-lg shadow-sm p-6 sticky top-8"
-              >
-                <h2 className="text-lg font-serif font-medium mb-6">주문 요약</h2>
+              <div className="bg-background border rounded-lg p-6 sticky top-24">
+                <h2 className="text-xl font-medium mb-6">주문 요약</h2>
 
-                {/* 가격 계산 */}
+                {/* Price Breakdown */}
                 <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span>상품 금액</span>
                     <span>{totalAmount.toLocaleString()}원</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span>배송비</span>
-                    <span className={shipping === 0 ? 'text-green-600' : ''}>
-                      {shipping === 0 ? '무료' : `${shipping.toLocaleString()}원`}
+                    <span>
+                      {shippingCost === 0 ? (
+                        <span className="text-green-600">무료</span>
+                      ) : (
+                        `${shippingCost.toLocaleString()}원`
+                      )}
                     </span>
                   </div>
-                  {promoDiscount > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>할인</span>
-                      <span>-{promoDiscount.toLocaleString()}원</span>
-                    </div>
+                  {shippingCost === 0 && (
+                    <p className="text-xs text-green-600">10만원 이상 구매 시 무료배송</p>
                   )}
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between font-semibold">
-                      <span>총 결제 금액</span>
-                      <span className="text-lg">{finalTotal.toLocaleString()}원</span>
-                    </div>
+                  <hr />
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>총 결제 금액</span>
+                    <span>{finalAmount.toLocaleString()}원</span>
                   </div>
                 </div>
 
-                {/* 프로모션 코드 */}
+                {/* Promo Code */}
                 <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2">프로모션 코드</label>
                   <div className="flex space-x-2">
                     <input
                       type="text"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value)}
-                      placeholder="프로모션 코드"
-                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-black"
+                      placeholder="코드를 입력하세요"
+                      className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-foreground"
                     />
-                    <button
-                      onClick={handlePromoCode}
-                      className="px-4 py-2 bg-gray-100 text-sm rounded-lg hover:bg-gray-200 transition-colors"
-                    >
+                    <button className="px-4 py-2 border rounded-lg text-sm hover:bg-muted transition-colors">
                       적용
                     </button>
                   </div>
                 </div>
 
-                {/* 주문하기 버튼 */}
+                {/* Checkout Buttons */}
                 <div className="space-y-3">
                   {user ? (
-                    <button className="w-full bg-black text-white py-3 font-serif font-medium hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2">
-                      <CreditCard className="w-5 h-5" />
-                      <span>주문하기</span>
-                    </button>
+                    <Link
+                      href="/checkout"
+                      className="w-full flex items-center justify-center space-x-2 py-3 bg-foreground text-background hover:opacity-90 transition-opacity"
+                    >
+                      <span>결제하기</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
                   ) : (
                     <Link
-                      href="/register"
-                      className="w-full bg-black text-white py-3 font-serif font-medium hover:bg-gray-800 transition-colors flex items-center justify-center"
+                      href="/register?redirect=/checkout"
+                      className="w-full flex items-center justify-center space-x-2 py-3 bg-foreground text-background hover:opacity-90 transition-opacity"
                     >
-                      로그인 후 주문하기
+                      <span>로그인 후 결제하기</span>
+                      <ArrowRight className="w-4 h-4" />
                     </Link>
                   )}
-
-                  <button className="w-full border border-gray-200 py-3 font-serif font-medium hover:bg-gray-50 transition-colors">
-                    계속 쇼핑하기
-                  </button>
+                  
+                  <Link
+                    href="/"
+                    className="w-full text-center py-3 border border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
+                  >
+                    쇼핑 계속하기
+                  </Link>
                 </div>
 
-                {/* 혜택 안내 */}
-                <div className="mt-6 space-y-3 text-xs text-gray-600">
-                  <div className="flex items-start space-x-2">
-                    <Truck className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <span>30만원 이상 구매 시 무료배송</span>
-                  </div>
-                  <div className="flex items-start space-x-2">
-                    <Shield className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <span>정품 보증 및 7일 무조건 반품</span>
-                  </div>
-                  <div className="flex items-start space-x-2">
-                    <Info className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <span>상품 상담 및 A/S 지원</span>
+                {/* Additional Info */}
+                <div className="mt-6 pt-6 border-t">
+                  <div className="text-xs opacity-60 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Heart className="w-4 h-4" />
+                      <span>찜 목록에 저장된 상품도 확인해보세요</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Gift className="w-4 h-4" />
+                      <span>회원 등급별 추가 혜택이 적용됩니다</span>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Recommendations */}
+      <section className="py-16 xs:py-12 px-4 bg-secondary">
+        <div className="container mx-auto text-center">
+          <h2 className="text-2xl xs:text-xl font-light mb-8">함께 구매하면 좋은 상품</h2>
+          <p className="opacity-70 mb-8">장바구니 상품과 어울리는 추천 상품들을 확인해보세요</p>
+          <Link 
+            href="/products" 
+            className="inline-block px-8 py-3 bg-foreground text-background hover:opacity-90 transition-opacity"
+          >
+            추천 상품 보기
+          </Link>
+        </div>
+      </section>
     </PageLayout>
   );
 } 

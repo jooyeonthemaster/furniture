@@ -10,6 +10,7 @@ import SectionParser from '@/components/admin/SectionParser';
 import ImageUploader from '@/components/admin/ImageUploader';
 import OverviewImageUploader from '@/components/admin/OverviewImageUploader';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { addProduct } from '@/lib/products'; // 정적 import로 변경
 
 interface ProductForm {
   // 기본 정보
@@ -295,8 +296,7 @@ export default function AddProductPage() {
     setIsSubmitting(true);
 
     try {
-      // Firebase에 상품 데이터 저장
-      const { addProduct } = await import('@/lib/products');
+      // Firebase에 상품 데이터 저장 (정적 import 사용)
       
       // 폼 데이터를 Product 타입에 맞게 변환 (undefined 제거)
       const productData = {

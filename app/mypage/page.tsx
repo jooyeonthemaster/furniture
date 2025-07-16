@@ -1,379 +1,396 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/components/providers/ClientProviders';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { User, Package, Heart, Clock, Star, ChevronRight, Settings, CreditCard, MapPin, Bell } from 'lucide-react';
-import PageLayout from '@/components/layout/PageLayout';
-
-const menuItems = [
-  { id: 'profile', label: '프로필', icon: User },
-  { id: 'orders', label: '주문내역', icon: Package },
-  { id: 'wishlist', label: '찜목록', icon: Heart },
-  { id: 'reviews', label: '리뷰', icon: Star },
-  { id: 'addresses', label: '배송지', icon: MapPin },
-  { id: 'payments', label: '결제수단', icon: CreditCard },
-  { id: 'notifications', label: '알림설정', icon: Bell },
-  { id: 'settings', label: '설정', icon: Settings }
-];
-
-const recentOrders = [
-  {
-    id: 'ORD-001',
-    date: '2024-12-15',
-    status: '배송완료',
-    items: [
-      {
-        name: 'Herman Miller Aeron 의자',
-        image: '/SEATING.jpg',
-        price: 567000,
-        quantity: 1
-      }
-    ],
-    total: 567000
-  },
-  {
-    id: 'ORD-002',
-    date: '2024-12-10',
-    status: '배송중',
-    items: [
-      {
-        name: 'B&B Italia Charles 소파',
-        image: '/hero.jpg',
-        price: 1350000,
-        quantity: 1
-      }
-    ],
-    total: 1350000
-  }
-];
-
-const wishlistItems = [
-  {
-    id: 1,
-    name: 'Cassina LC4 샤롱',
-    brand: 'Cassina',
-    image: '/LIGHTING.jpg',
-    originalPrice: 3200000,
-    salePrice: 800000,
-    discount: 75
-  },
-  {
-    id: 2,
-    name: 'Minotti Hamilton 소파',
-    brand: 'Minotti',
-    image: '/exhibition.jpg',
-    originalPrice: 5600000,
-    salePrice: 840000,
-    discount: 85
-  }
-];
-
-const userStats = [
-  { label: '총 주문', value: '12회', icon: Package },
-  { label: '총 구매금액', value: '8,450,000원', icon: CreditCard },
-  { label: '적립 포인트', value: '84,500P', icon: Star },
-  { label: '등급', value: 'VIP', icon: User }
-];
+import Image from 'next/image';
+import { 
+  Package, 
+  Heart, 
+  Truck, 
+  CreditCard, 
+  User, 
+  Settings,
+  ShoppingBag,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  ArrowRight,
+  Home,
+  MapPin
+} from 'lucide-react';
+import { Order, CustomerDashboard } from '@/types';
 
 export default function MyPage() {
-  const [activeTab, setActiveTab] = useState('profile');
+  const { user, signOut } = useAuth();
+  const { wishlistCount } = useWishlist();
+  const router = useRouter();
+  
+  const [loading, setLoading] = useState(true);
+  const [dashboard, setDashboard] = useState<CustomerDashboard | null>(null);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-6">
-              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">
-                <User className="w-12 h-12 opacity-60" />
-              </div>
-              <div>
-                <h3 className="text-xl font-medium mb-2">홍길동님</h3>
-                <p className="text-sm opacity-60 mb-2">hong@example.com</p>
-                <div className="flex items-center space-x-2">
-                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 text-xs font-medium rounded-full">
-                    VIP 회원
-                  </span>
-                  <span className="text-xs opacity-60">다음 등급까지 1,550,000원</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {userStats.map((stat, index) => (
-                <div key={index} className="text-center p-4 border rounded-lg">
-                  <stat.icon className="w-8 h-8 mx-auto mb-2 opacity-60" />
-                  <div className="text-lg font-medium">{stat.value}</div>
-                  <div className="text-sm opacity-60">{stat.label}</div>
-                </div>
-              ))}
-            </div>
+  useEffect(() => {
+    if (!user) {
+      router.push('/register?redirect=/mypage');
+      return;
+    }
 
-            <div className="border rounded-lg p-6">
-              <h4 className="font-medium mb-4">개인정보</h4>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">이름</span>
-                  <span className="text-sm">홍길동</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">이메일</span>
-                  <span className="text-sm">hong@example.com</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">휴대폰</span>
-                  <span className="text-sm">010-1234-5678</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">가입일</span>
-                  <span className="text-sm">2024.01.15</span>
-                </div>
-              </div>
-              <button className="w-full mt-6 py-2 border border-foreground hover:bg-foreground hover:text-background transition-all duration-300 text-sm">
-                정보 수정
-              </button>
-            </div>
-          </div>
-        );
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
 
-      case 'orders':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-medium">주문내역</h3>
-              <select className="px-3 py-2 border rounded-lg text-sm">
-                <option>최근 3개월</option>
-                <option>최근 6개월</option>
-                <option>최근 1년</option>
-              </select>
-            </div>
-            
-            {recentOrders.map((order) => (
-              <div key={order.id} className="border rounded-lg p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <div className="flex items-center space-x-4">
-                      <span className="font-medium">{order.id}</span>
-                      <span className="text-sm opacity-60">{order.date}</span>
-                    </div>
-                    <span className={`inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full ${
-                      order.status === '배송완료' ? 'bg-green-100 text-green-800' :
-                      order.status === '배송중' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.status}
-                    </span>
-                  </div>
-                  <ChevronRight className="w-5 h-5 opacity-60" />
-                </div>
-                
-                {order.items.map((item, index) => (
-                  <div key={index} className="flex items-center space-x-4 mb-4">
-                    <div className="w-16 h-16 bg-muted rounded overflow-hidden">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        width={64}
-                        height={64}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm">{item.name}</h4>
-                      <p className="text-sm opacity-60">수량: {item.quantity}개</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{item.price.toLocaleString()}원</div>
-                    </div>
-                  </div>
-                ))}
-                
-                <div className="border-t pt-4 flex justify-between items-center">
-                  <span className="font-medium">총 결제금액</span>
-                  <span className="text-lg font-medium">{order.total.toLocaleString()}원</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
+        // 주문 내역 조회
+        const ordersResponse = await fetch(`/api/orders?customerId=${user.id}`);
+        if (ordersResponse.ok) {
+          const ordersData = await ordersResponse.json();
+          const orders = ordersData.orders || [];
+          
+          setRecentOrders(orders.slice(0, 3)); // 최근 3개 주문
 
-      case 'wishlist':
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-medium">찜목록</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {wishlistItems.map((item) => (
-                <div key={item.id} className="border rounded-lg p-4">
-                  <div className="flex space-x-4">
-                    <div className="w-24 h-24 bg-muted rounded overflow-hidden">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        width={96}
-                        height={96}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs opacity-60 mb-1">{item.brand}</div>
-                      <h4 className="font-medium text-sm mb-2">{item.name}</h4>
-                      <div className="flex items-center space-x-2 mb-3">
-                        <span className="font-medium">{item.salePrice.toLocaleString()}원</span>
-                        <span className="text-xs opacity-60 line-through">{item.originalPrice.toLocaleString()}원</span>
-                        <span className="text-xs bg-red-600 text-white px-2 py-1 rounded">{item.discount}%</span>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button className="flex-1 py-2 bg-foreground text-background text-xs rounded hover:opacity-90">
-                          장바구니
-                        </button>
-                        <button className="px-3 py-2 border text-xs rounded hover:bg-muted">
-                          <Heart className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+          // 대시보드 데이터 계산
+          const totalOrders = orders.length;
+          const pendingOrders = orders.filter((order: Order) => 
+            ['pending', 'confirmed', 'preparing', 'shipped'].includes(order.status)
+          ).length;
+          const totalSpent = orders
+            .filter((order: Order) => order.status === 'delivered')
+            .reduce((sum: number, order: Order) => sum + (order.finalAmount || order.totalAmount || 0), 0);
 
-      case 'reviews':
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-medium">내 리뷰</h3>
-            
-            <div className="text-center py-16">
-              <Star className="w-16 h-16 mx-auto mb-4 opacity-30" />
-              <p className="text-lg opacity-70 mb-4">아직 작성한 리뷰가 없습니다</p>
-              <p className="text-sm opacity-60 mb-6">
-                구매한 상품에 대한 리뷰를 작성하고 포인트를 받아보세요
-              </p>
-              <Link href="/orders" className="inline-block px-6 py-2 border border-foreground hover:bg-foreground hover:text-background transition-all duration-300 text-sm">
-                주문내역 보기
-              </Link>
-            </div>
-          </div>
-        );
+          setDashboard({
+            totalOrders,
+            pendingOrders,
+            totalSpent,
+            wishlistCount,
+            recentOrders: orders.slice(0, 5),
+            trackingInfo: orders
+              .filter((order: Order) => order.shippingInfo?.trackingNumber)
+              .map((order: Order) => order.shippingInfo!)
+              .slice(0, 3)
+          });
+        }
+      } catch (error) {
+        console.error('대시보드 데이터 로드 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchDashboardData();
+  }, [user, router, wishlistCount]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+      case 'confirmed':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'preparing':
+      case 'shipped':
+        return 'text-blue-600 bg-blue-100';
+      case 'delivered':
+        return 'text-green-600 bg-green-100';
+      case 'cancelled':
+        return 'text-red-600 bg-red-100';
       default:
-        return (
-          <div className="text-center py-16">
-            <Clock className="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p className="text-lg opacity-70">준비 중입니다</p>
-          </div>
-        );
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
-  return (
-    <PageLayout>
-      {/* Hero Section */}
-      <section className="py-16 xs:py-12 px-4 bg-secondary">
-        <div className="container mx-auto text-center">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl xs:text-3xl md:text-5xl font-light mb-4"
-          >
-            마이페이지
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg xs:text-base opacity-70"
-          >
-            계정 정보와 주문 내역을 관리하세요
-          </motion.p>
-        </div>
-      </section>
+  const getStatusText = (status: string) => {
+    const statusMap: Record<string, string> = {
+      pending: '주문 대기',
+      confirmed: '주문 확인',
+      payment_completed: '결제 완료',
+      preparing: '상품 준비중',
+      shipped: '배송 중',
+      delivered: '배송 완료',
+      cancelled: '주문 취소',
+      returned: '반품',
+      refunded: '환불 완료'
+    };
+    return statusMap[status] || status;
+  };
 
-      {/* Main Content */}
-      <section className="py-16 xs:py-12 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar */}
-            <div className="lg:w-1/4">
-              <div className="border rounded-lg p-6 sticky top-24">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                    <User className="w-8 h-8 opacity-60" />
-                  </div>
-                  <h3 className="font-medium">홍길동님</h3>
-                  <p className="text-sm opacity-60">VIP 회원</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-light mb-2">마이페이지</h1>
+            <p className="text-muted-foreground">안녕하세요, {user?.name}님!</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              <span>홈으로</span>
+            </Link>
+            <button
+              onClick={signOut}
+              className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"
+            >
+              로그아웃
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 메인 컨텐츠 */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* 요약 카드들 */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white border rounded-lg p-6 text-center">
+                <Package className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+                <div className="text-2xl font-bold">{dashboard?.totalOrders || 0}</div>
+                <div className="text-sm text-muted-foreground">총 주문</div>
+              </div>
+              
+              <div className="bg-white border rounded-lg p-6 text-center">
+                <Clock className="w-8 h-8 mx-auto mb-2 text-yellow-600" />
+                <div className="text-2xl font-bold">{dashboard?.pendingOrders || 0}</div>
+                <div className="text-sm text-muted-foreground">진행 중</div>
+              </div>
+              
+              <div className="bg-white border rounded-lg p-6 text-center">
+                <Heart className="w-8 h-8 mx-auto mb-2 text-red-600" />
+                <div className="text-2xl font-bold">{wishlistCount}</div>
+                <div className="text-sm text-muted-foreground">찜 목록</div>
+              </div>
+              
+              <div className="bg-white border rounded-lg p-6 text-center">
+                <CreditCard className="w-8 h-8 mx-auto mb-2 text-green-600" />
+                <div className="text-2xl font-bold">
+                  {dashboard ? `${(dashboard.totalSpent / 10000).toFixed(0)}만원` : '0원'}
                 </div>
-                
-                <nav className="space-y-2">
-                  {menuItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 text-left rounded-lg transition-colors ${
-                        activeTab === item.id
-                          ? 'bg-foreground text-background'
-                          : 'hover:bg-muted'
-                      }`}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span className="text-sm">{item.label}</span>
-                    </button>
-                  ))}
-                </nav>
+                <div className="text-sm text-muted-foreground">총 구매액</div>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="lg:w-3/4">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-background border rounded-lg p-8"
+            {/* 최근 주문 */}
+            <div className="bg-white border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-medium">최근 주문 내역</h2>
+                <Link 
+                  href="/mypage/orders"
+                  className="text-primary hover:underline text-sm flex items-center"
+                >
+                  전체 보기
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Link>
+              </div>
+
+              {recentOrders.length > 0 ? (
+                <div className="space-y-4">
+                  {recentOrders.map((order) => (
+                    <div 
+                      key={order.id} 
+                      className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="font-medium">주문번호: {order.orderNumber || order.id}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(order.createdAt).toLocaleDateString('ko-KR')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                            {getStatusText(order.status)}
+                          </span>
+                          <p className="text-sm font-medium mt-1">
+                            {(order.finalAmount || order.totalAmount || 0).toLocaleString()}원
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {order.items && order.items.length > 0 && (
+                        <div className="flex items-center space-x-3">
+                          <div className="relative w-12 h-12">
+                            <Image
+                              src={order.items[0].productImage || '/placeholder-image.jpg'}
+                              alt={order.items[0].productName}
+                              fill
+                              className="object-cover rounded"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{order.items[0].productName}</p>
+                            {order.items.length > 1 && (
+                              <p className="text-xs text-muted-foreground">
+                                외 {order.items.length - 1}개 상품
+                              </p>
+                            )}
+                          </div>
+                          <Link
+                            href={`/mypage/orders/${order.id}`}
+                            className="text-primary hover:underline text-sm"
+                          >
+                            상세보기
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground mb-4">아직 주문 내역이 없습니다.</p>
+                  <Link 
+                    href="/"
+                    className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    쇼핑하러 가기
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* 최근 활동 */}
+            <div className="bg-white border rounded-lg p-6">
+              <h2 className="text-xl font-medium mb-6">최근 활동</h2>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 text-sm">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span>회원가입을 완료했습니다</span>
+                  <span className="text-muted-foreground ml-auto">
+                    {new Date(user?.createdAt || '').toLocaleDateString('ko-KR')}
+                  </span>
+                </div>
+                {dashboard?.recentOrders && dashboard.recentOrders.length > 0 && (
+                  <div className="flex items-center space-x-3 text-sm">
+                    <ShoppingBag className="w-5 h-5 text-blue-600" />
+                    <span>최근 주문: {dashboard.recentOrders[0].items?.[0]?.productName || '상품명 없음'}</span>
+                    <span className="text-muted-foreground ml-auto">
+                      {new Date(dashboard.recentOrders[0].createdAt).toLocaleDateString('ko-KR')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 사이드바 */}
+          <div className="space-y-6">
+            {/* 프로필 정보 */}
+            <div className="bg-white border rounded-lg p-6">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                  <User className="w-8 h-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">{user?.name}</h3>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {user?.role === 'customer' ? '일반 고객' : '딜러'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/mypage/profile"
+                className="block w-full text-center px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors"
               >
-                {renderContent()}
-              </motion.div>
+                프로필 수정
+              </Link>
+            </div>
+
+            {/* 빠른 메뉴 */}
+            <div className="bg-white border rounded-lg p-6">
+              <h3 className="font-medium mb-4">빠른 메뉴</h3>
+              <div className="space-y-2">
+                <Link
+                  href="/mypage/orders"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Package className="w-5 h-5 text-muted-foreground" />
+                  <span>주문 내역</span>
+                  <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </Link>
+                
+                <Link
+                  href="/mypage/wishlist"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Heart className="w-5 h-5 text-muted-foreground" />
+                  <span>찜 목록</span>
+                  <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </Link>
+                
+                <Link
+                  href="/mypage/shipping"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Truck className="w-5 h-5 text-muted-foreground" />
+                  <span>배송 조회</span>
+                  <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </Link>
+                
+                <Link
+                  href="/mypage/payments"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <CreditCard className="w-5 h-5 text-muted-foreground" />
+                  <span>결제 내역</span>
+                  <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </Link>
+                
+                <Link
+                  href="/mypage/addresses"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <MapPin className="w-5 h-5 text-muted-foreground" />
+                  <span>배송지 관리</span>
+                  <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </Link>
+                
+                <Link
+                  href="/mypage/settings"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Settings className="w-5 h-5 text-muted-foreground" />
+                  <span>설정</span>
+                  <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </Link>
+              </div>
+            </div>
+
+            {/* 고객센터 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="font-medium mb-2 text-blue-900">고객센터</h3>
+              <p className="text-sm text-blue-700 mb-4">
+                궁금한 점이 있으시면 언제든 문의하세요.
+              </p>
+              <div className="space-y-2">
+                <p className="text-sm">
+                  <span className="font-medium">전화:</span> 02-1234-5678
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">이메일:</span> support@luxefurniture.com
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">운영시간:</span> 평일 9:00-18:00
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Quick Actions */}
-      <section className="py-16 xs:py-12 px-4 bg-secondary">
-        <div className="container mx-auto text-center">
-          <h2 className="text-2xl xs:text-xl font-light mb-8">빠른 메뉴</h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            <Link href="/products" className="group p-6 bg-background rounded-lg hover:shadow-lg transition-shadow">
-              <Package className="w-8 h-8 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-              <div className="font-medium mb-1">상품 둘러보기</div>
-              <div className="text-sm opacity-60">새로운 상품 찾기</div>
-            </Link>
-            
-            <Link href="/best" className="group p-6 bg-background rounded-lg hover:shadow-lg transition-shadow">
-              <Star className="w-8 h-8 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-              <div className="font-medium mb-1">베스트 상품</div>
-              <div className="text-sm opacity-60">인기 상품 보기</div>
-            </Link>
-            
-            <Link href="/special" className="group p-6 bg-background rounded-lg hover:shadow-lg transition-shadow">
-              <Clock className="w-8 h-8 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-              <div className="font-medium mb-1">기획전</div>
-              <div className="text-sm opacity-60">특별한 혜택</div>
-            </Link>
-            
-            <Link href="/ai-chat" className="group p-6 bg-background rounded-lg hover:shadow-lg transition-shadow">
-              <Bell className="w-8 h-8 mx-auto mb-3 group-hover:scale-110 transition-transform" />
-              <div className="font-medium mb-1">AI 상담</div>
-              <div className="text-sm opacity-60">궁금한 점 문의</div>
-            </Link>
-          </div>
-        </div>
-      </section>
-    </PageLayout>
+      </div>
+    </div>
   );
 } 

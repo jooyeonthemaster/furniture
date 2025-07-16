@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { auth, db } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/providers/ClientProviders';
 
 export default function TestFirebasePage() {
   const { user, loading } = useAuth();

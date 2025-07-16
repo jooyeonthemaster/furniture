@@ -12,8 +12,9 @@ import {
   Info, Clock, Users, TrendingUp, Download, Plus, FileText, Wrench, Settings
 } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/providers/ClientProviders';
 import { useCart } from '@/hooks/useCart';
+import { useWishlist } from '@/hooks/useWishlist';
 import { getProductById, getRelatedProducts } from '@/lib/products';
 import { Product } from '@/types';
 
@@ -22,13 +23,13 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { addItem, getItemQuantity } = useCart();
+  const { toggleWishlist, isInWishlist, loading: wishlistLoading } = useWishlist();
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [relatedLoading, setRelatedLoading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedTab, setSelectedTab] = useState('overview');
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [relatedQuantities, setRelatedQuantities] = useState<Record<string, number>>({});
 
@@ -111,6 +112,41 @@ export default function ProductDetailPage() {
     });
 
     alert(`총 ${selectedRelated.length + 1}개 상품이 장바구니에 추가되었습니다!`);
+  };
+
+  // 바로 구매하기 함수
+  const handleDirectPurchase = () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      router.push('/register?redirect=' + encodeURIComponent(`/products/${params.id}`));
+      return;
+    }
+
+    if (!product) {
+      alert('상품 정보를 불러올 수 없습니다.');
+      return;
+    }
+
+    // 세션 스토리지에 바로 구매할 상품 정보 저장
+    const directPurchaseData = {
+      items: [{
+        id: `direct-${product.id}-${Date.now()}`, // 고유 ID 생성
+        productId: product.id,
+        name: product.name,
+        brand: product.brand,
+        image: product.images[0] || '',
+        originalPrice: product.originalPrice,
+        salePrice: product.salePrice,
+        maxStock: product.stock,
+        quantity,
+      }],
+      isDirect: true, // 바로 구매 플래그
+    };
+
+    sessionStorage.setItem('directPurchase', JSON.stringify(directPurchaseData));
+    
+    // 결제 페이지로 이동
+    router.push('/checkout?direct=true');
   };
 
   if (loading) {
@@ -311,19 +347,23 @@ export default function ProductDetailPage() {
                     <span>장바구니 {getItemQuantity(product?.id || '') > 0 && `(${getItemQuantity(product?.id || '')})`}</span>
                   </button>
                   <button
-                    onClick={() => setIsWishlisted(!isWishlisted)}
+                    onClick={() => product && toggleWishlist(product.id)}
+                    disabled={wishlistLoading}
                     className={`p-3 rounded-lg border border-border transition-colors ${
-                      isWishlisted ? 'bg-red-50 text-red-600' : 'hover:bg-muted'
-                    }`}
+                      product && isInWishlist(product.id) ? 'bg-red-50 text-red-600' : 'hover:bg-muted'
+                    } ${wishlistLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+                    <Heart className={`w-5 h-5 ${product && isInWishlist(product.id) ? 'fill-current' : ''}`} />
                   </button>
                   <button className="p-3 rounded-lg border border-border hover:bg-muted transition-colors">
                     <Share2 className="w-5 h-5" />
                   </button>
                 </div>
 
-                <button className="w-full bg-foreground text-background py-3 rounded-lg font-medium hover:bg-foreground/90 transition-colors">
+                <button 
+                  onClick={() => handleDirectPurchase()}
+                  className="w-full bg-foreground text-background py-3 rounded-lg font-medium hover:bg-foreground/90 transition-colors"
+                >
                   바로 구매하기
                 </button>
 

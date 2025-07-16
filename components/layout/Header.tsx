@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, ShoppingBag, User, Heart, Menu, X } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/providers/ClientProviders';
 import { useCart } from '@/hooks/useCart';
 
 export default function Header() {
@@ -442,7 +442,7 @@ export default function Header() {
                 </button>
 
                 {user && (
-                  <Link href="/myshop/wish_list.html" className="p-3 text-gray-600 hover:text-black">
+                  <Link href="/mypage/wishlist" className="p-3 text-gray-600 hover:text-black">
                     <Heart size={30} />
                   </Link>
                 )}

@@ -13,8 +13,10 @@ export interface User {
 
 export interface Customer extends User {
   role: 'customer';
-  savedProducts?: string[];
-  purchaseHistory?: string[];
+  savedProducts?: string[]; // 찜 목록 (상품 ID 배열)
+  purchaseHistory?: string[]; // 구매 내역 (주문 ID 배열)
+  shippingAddresses?: Address[]; // 배송지 목록
+  defaultAddressId?: string; // 기본 배송지 ID
 }
 
 export interface Dealer extends User {
@@ -143,6 +145,64 @@ export type ProductSource =
   | 'photoshoot'
   | 'other';
 
+// 찜 목록 관련 타입
+export interface WishlistItem {
+  id: string;
+  userId: string;
+  productId: string;
+  addedAt: Date;
+  product?: Product; // populated product data
+}
+
+// 토스 페이먼츠 관련 타입
+export interface TossPaymentConfig {
+  clientKey: string;
+  customerKey: string;
+  amount: number;
+  orderId: string;
+  orderName: string;
+  successUrl: string;
+  failUrl: string;
+  customerEmail: string;
+  customerName: string;
+  customerMobilePhone?: string;
+}
+
+export interface TossPaymentResponse {
+  paymentKey: string;
+  orderId: string;
+  amount: number;
+  status: 'READY' | 'IN_PROGRESS' | 'WAITING_FOR_DEPOSIT' | 'DONE' | 'CANCELED' | 'PARTIAL_CANCELED' | 'ABORTED' | 'EXPIRED';
+  requestedAt: string;
+  approvedAt?: string;
+  method: 'CARD' | 'VIRTUAL_ACCOUNT' | 'SIMPLE_PAY' | 'PHONE' | 'CULTURE_GIFT_CERTIFICATE' | 'BOOK_CULTURE_GIFT_CERTIFICATE' | 'GAME_CULTURE_GIFT_CERTIFICATE';
+  totalAmount: number;
+  balanceAmount: number;
+  suppliedAmount: number;
+  vat: number;
+  taxFreeAmount: number;
+  taxExemptionAmount: number;
+  receipt?: {
+    url: string;
+  };
+  checkout?: {
+    url: string;
+  };
+  card?: {
+    issuerCode: string;
+    acquirerCode: string;
+    number: string;
+    installmentPlanMonths: number;
+    isInterestFree: boolean;
+    approveNo: string;
+    useCardPoint: boolean;
+    cardType: 'CREDIT' | 'DEBIT' | 'GIFT';
+    ownerType: 'PERSONAL' | 'CORPORATE';
+    acquireStatus: 'READY' | 'REQUESTED' | 'COMPLETED' | 'CANCEL_REQUESTED' | 'CANCELED';
+    amount: number;
+  };
+}
+
 // Chat Types
 export interface ChatSession {
   id: string;
@@ -171,53 +231,137 @@ export interface Message {
   attachments?: string[];
 }
 
-// Order Types
+// Order Types 확장
 export interface Order {
   id: string;
+  orderNumber: string;
   customerId: string;
   dealerId?: string;
-  products: OrderItem[];
+  items: OrderItem[];
   totalAmount: number;
+  shippingFee: number;
+  finalAmount: number;
   status: OrderStatus;
-  shippingAddress: Address;
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  paymentKey?: string; // 토스 페이먼츠 결제 키
+  shippingAddress?: Address;
   billingAddress?: Address;
-  paymentMethod: string;
-  paymentStatus: PaymentStatus;
+  shippingInfo?: ShippingInfo;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  completedAt?: Date;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+  canceledAt?: string;
+  cancelReason?: string;
 }
 
 export interface OrderItem {
   productId: string;
+  productName: string;
+  productImage: string;
   quantity: number;
   price: number;
+  originalPrice: number;
   discount: number;
+  product?: Product; // populated product data
 }
 
 export type OrderStatus = 
-  | 'pending'
-  | 'confirmed'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled'
-  | 'returned';
+  | 'pending'           // 주문 대기
+  | 'confirmed'         // 주문 확인
+  | 'payment_completed' // 결제 완료
+  | 'preparing'         // 상품 준비중
+  | 'shipped'           // 배송 중
+  | 'delivered'         // 배송 완료
+  | 'cancelled'         // 주문 취소
+  | 'returned'          // 반품
+  | 'refunded';         // 환불 완료
 
 export type PaymentStatus = 
-  | 'pending'
-  | 'completed'
-  | 'failed'
-  | 'refunded';
+  | 'pending'    // 결제 대기
+  | 'completed'  // 결제 완료
+  | 'failed'     // 결제 실패
+  | 'cancelled'  // 결제 취소
+  | 'refunded';  // 환불 완료
+
+export type PaymentMethod = 
+  | 'toss_card'          // 토스 카드 결제
+  | 'toss_account'       // 토스 계좌 결제
+  | 'toss_simple'        // 토스 간편결제
+  | 'bank_transfer'      // 무통장 입금
+  | 'virtual_account';   // 가상계좌
+
+// 배송 정보 타입
+export interface ShippingInfo {
+  id?: string;
+  orderId?: string;
+  customerId?: string;
+  trackingNumber?: string;
+  carrier?: string; // 택배사
+  carrierUrl?: string; // 택배사 추적 URL
+  estimatedDelivery?: Date;
+  actualDelivery?: Date;
+  shippingCost?: number;
+  installationRequired?: boolean;
+  installationCost?: number;
+  installationDate?: Date;
+  status: ShippingStatus;
+  shippingAddress?: {
+    recipientName: string;
+    recipientPhone: string;
+    zipCode: string;
+    address: string;
+    detailAddress: string;
+  };
+  trackingHistory?: TrackingEvent[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type ShippingStatus =
+  | 'preparing'    // 배송 준비중
+  | 'in_transit'   // 배송 중
+  | 'out_for_delivery' // 배송 중 (마지막 단계)
+  | 'delivered'    // 배송 완료
+  | 'failed'       // 배송 실패
+  | 'returned';    // 반송
+
+export interface TrackingEvent {
+  timestamp: string;
+  status: string;
+  location?: string;
+  description: string;
+}
+
+
 
 export interface Address {
-  street: string;
-  city: string;
-  state: string;
+  id?: string;
+  customerId: string;
+  recipientName: string;
+  recipientPhone: string;
   zipCode: string;
-  country: string;
-  phone?: string;
+  address: string;
+  detailAddress: string;
+  isDefault: boolean;
+  label: string; // '집', '회사', '기타' 등
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 결제 내역 조회용 타입
+export interface PaymentHistory {
+  id: string;
+  orderId: string;
+  paymentKey: string;
+  amount: number;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  paidAt: Date;
+  refundedAt?: Date;
+  refundAmount?: number;
+  order?: Order; // populated order data
 }
 
 // Analytics Types
@@ -232,4 +376,14 @@ export interface DealerAnalytics {
   activeChats: number;
   completedChats: number;
   customerSatisfaction: number;
+}
+
+// 마이페이지 대시보드용 요약 타입
+export interface CustomerDashboard {
+  totalOrders: number;
+  pendingOrders: number;
+  totalSpent: number;
+  wishlistCount: number;
+  recentOrders: Order[];
+  trackingInfo: ShippingInfo[];
 } 
