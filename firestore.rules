@@ -31,13 +31,17 @@ service cloud.firestore {
       allow write: if request.auth != null && resource.data.customerId == request.auth.uid;
     }
     
-    // 개발 단계에서는 제품 쓰기를 모든 인증된 사용자에게 허용 (임시)
+    // 🚨 현재: 개발용 임시 규칙 (보안 위험!)
     match /products/{productId} {
-      allow read: if true;
-      allow write: if request.auth != null; // 임시로 모든 인증된 사용자 허용
-      // 원래 규칙: allow write: if request.auth != null && 
-      //   (request.auth.token.role == 'admin' || request.auth.token.role == 'dealer');
+      allow read, write: if true; // 임시로 모든 접근 허용
     }
+    
+    // 🛡️ 프로덕션용 권장 규칙 (향후 적용):
+    // match /products/{productId} {
+    //   allow read: if true;
+    //   allow write: if request.auth != null && 
+    //     (request.auth.token.role == 'admin' || request.auth.token.role == 'dealer');
+    // }
     
     // 사용자 프로필은 본인만 수정 가능
     match /users/{userId} {

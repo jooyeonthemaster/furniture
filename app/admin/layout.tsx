@@ -8,7 +8,9 @@ import {
   LayoutDashboard, Package, Users, BarChart3, Settings, 
   LogOut, Menu, X, Plus, Search, Bell
 } from 'lucide-react';
-// import { useAuth } from '@/hooks/useAuth';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const navigationItems = [
   { name: '대시보드', href: '/admin', icon: LayoutDashboard },
@@ -23,18 +25,23 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // const { user, signOut, loading } = useAuth();
+  const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // 임시로 인증 체크 비활성화
-  /*
-  useEffect(() => {
-    if (!loading && (!user || user.email !== 'admin@luxefurniture.com')) {
-      router.push('/');
-    }
-  }, [user, loading, router]);
+  // 관리자 권한 체크 (임시로 비활성화)
+  const isAdmin = true; // 임시로 모든 사용자를 관리자로 간주
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
+  };
+
+  // 로딩 중
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -43,19 +50,10 @@ export default function AdminLayout({
     );
   }
 
-  if (!user || user.email !== 'admin@luxefurniture.com') {
-    return null;
-  }
-  */
-
-  // 임시 사용자 데이터
-  const user = {
-    name: 'Admin User',
-    email: 'admin@luxefurniture.com'
-  };
-
-  const signOut = async () => {
-    console.log('로그아웃');
+  // 사용자 정보 (로그인 여부와 관계없이 임시 정보 사용)
+  const userData = {
+    name: user?.displayName || 'Admin User',
+    email: user?.email || 'admin@luxefurniture.com'
   };
 
   return (
@@ -102,14 +100,14 @@ export default function AdminLayout({
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
           <div className="flex items-center space-x-3 px-4 py-3 text-sm">
             <div className="w-8 h-8 bg-foreground rounded-full flex items-center justify-center text-background text-xs">
-              {user.name.charAt(0)}
+              {userData.name.charAt(0)}
             </div>
             <div className="flex-1">
-              <p className="font-medium">{user.name}</p>
+              <p className="font-medium">{userData.name}</p>
               <p className="text-xs opacity-60">관리자</p>
             </div>
             <button
-              onClick={signOut}
+              onClick={handleSignOut}
               className="p-2 hover:bg-background rounded-lg transition-colors"
             >
               <LogOut className="w-4 h-4" />

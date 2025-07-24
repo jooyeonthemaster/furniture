@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingBag, User, Heart, Menu, X } from 'lucide-react';
+import { Search, ShoppingBag, User, Heart, Menu, X, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '@/components/providers/ClientProviders';
 import { useCart } from '@/hooks/useCart';
 
@@ -15,6 +15,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,6 +42,14 @@ export default function Header() {
     setActiveSubMenu(null);
   };
 
+  const handleMoreMenuEnter = () => {
+    setShowMoreMenu(true);
+  };
+
+  const handleMoreMenuLeave = () => {
+    setShowMoreMenu(false);
+  };
+
   return (
     <>
       <header 
@@ -52,23 +61,26 @@ export default function Header() {
 
         {/* 데스크톱 네비게이션 */}
         <div className="hidden lg:block">
-          <div className="px-4 lg:px-8">
+          <div className="px-2 xl:px-8">
             <div className="flex items-center justify-between">
               
               {/* 왼쪽 메뉴들 */}
               <nav className="flex items-center">
 
-                {/* 네비게이션 홈 로고 */}
-                <Link href="/" className="mr-8">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="360" height="80" viewBox="0 0 360 80">
-                    <text x="20" y="60" fontSize="72" fontFamily="serif" fill="black">SERQU</text>
+                {/* 네비게이션 홈 로고 - 크기 대폭 축소 */}
+                <Link href="/" className="mr-4 xl:mr-8 flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="120" height="28" viewBox="0 0 120 28" className="xl:hidden">
+                    <text x="5" y="22" fontSize="24" fontFamily="serif" fill="black">SERQU</text>
+                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="160" height="32" viewBox="0 0 160 32" className="hidden xl:block">
+                    <text x="8" y="26" fontSize="28" fontFamily="serif" fill="black">SERQU</text>
                   </svg>
                 </Link>
 
-                {/* 메뉴들... (기존 메뉴 유지) */}
+                {/* 주요 메뉴들 - 항상 표시 */}
                 <Link 
                   href="/category/new/223/" 
-                  className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                  className="block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                 >
                   New
                 </Link>
@@ -80,7 +92,7 @@ export default function Header() {
                 >
                   <Link 
                     href="/category/furniture/224/" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                    className="block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                   >
                     Furniture
                   </Link>
@@ -162,14 +174,13 @@ export default function Header() {
                   )}
                 </div>
 
-                {/* 나머지 모든 메뉴들은 동일하게 유지... */}
                 <div 
                   className="relative"
                   onMouseEnter={() => handleMenuEnter('lighting')}
                 >
                   <Link 
                     href="/category/lighting/225/" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                    className="block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                   >
                     Lighting
                   </Link>
@@ -193,13 +204,14 @@ export default function Header() {
                   )}
                 </div>
 
+                {/* 중간 화면에서도 표시되는 메뉴들 */}
                 <div 
-                  className="relative"
+                  className="relative hidden xl:block"
                   onMouseEnter={() => handleMenuEnter('kitchen')}
                 >
                   <Link 
                     href="/category/kitchen/227/" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                    className="block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                   >
                     Kitchen
                   </Link>
@@ -228,12 +240,12 @@ export default function Header() {
                 </div>
 
                 <div 
-                  className="relative"
+                  className="relative hidden xl:block"
                   onMouseEnter={() => handleMenuEnter('accessories')}
                 >
                   <Link 
                     href="/category/accessories/229/" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                    className="block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                   >
                     Accessories
                   </Link>
@@ -265,102 +277,14 @@ export default function Header() {
                   )}
                 </div>
 
-                <div 
-                  className="relative"
-                  onMouseEnter={() => handleMenuEnter('textile')}
-                >
-                  <Link 
-                    href="/category/textile/226/" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
-                  >
-                    Textile
-                  </Link>
-
-                  {activeMenu === 'textile' && (
-                    <div className="absolute top-full left-0 w-screen bg-white border-t shadow-lg">
-                      <div className="px-4 lg:px-8 py-6">
-                        <ul className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-                          <li><Link href="/category/textile/226/" className="text-gray-600 hover:text-black">전체</Link></li>
-                          <li><Link href="/category/원단/248/" className="text-gray-600 hover:text-black">원단</Link></li>
-                          <li><Link href="/category/쿠션/246/" className="text-gray-600 hover:text-black">쿠션</Link></li>
-                          <li><Link href="/category/방석/2921/" className="text-gray-600 hover:text-black">방석</Link></li>
-                          <li><Link href="/category/블랭킷/245/" className="text-gray-600 hover:text-black">블랭킷</Link></li>
-                          <li><Link href="/category/침실/244/" className="text-gray-600 hover:text-black">침실</Link></li>
-                          <li><Link href="/category/욕실/247/" className="text-gray-600 hover:text-black">욕실</Link></li>
-                          <li><Link href="/category/키친/2567/" className="text-gray-600 hover:text-black">키친</Link></li>
-                          <li><Link href="/category/러그매트/243/" className="text-gray-600 hover:text-black">러그/매트</Link></li>
-                          <li><Link href="/category/패션악세서리/2877/" className="text-gray-600 hover:text-black">패션 악세서리</Link></li>
-                          <li><Link href="/category/파우치가방/2871/" className="text-gray-600 hover:text-black">파우치/가방</Link></li>
-                          <li><Link href="/category/브로치패치/2872/" className="text-gray-600 hover:text-black">브로치/패치</Link></li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div 
-                  className="relative"
-                  onMouseEnter={() => handleMenuEnter('kids')}
-                >
-                  <Link 
-                    href="/category/kids/2596/" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
-                  >
-                    Kids
-                  </Link>
-
-                  {activeMenu === 'kids' && (
-                    <div className="absolute top-full left-0 w-screen bg-white border-t shadow-lg">
-                      <div className="px-4 lg:px-8 py-6">
-                        <ul className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-                          <li><Link href="/category/kids/2596/" className="text-gray-600 hover:text-black">전체</Link></li>
-                          <li><Link href="/category/어린이가구/2597/" className="text-gray-600 hover:text-black">어린이 가구</Link></li>
-                          <li><Link href="/category/조명/2937/" className="text-gray-600 hover:text-black">조명</Link></li>
-                          <li><Link href="/category/텍스타일/2598/" className="text-gray-600 hover:text-black">텍스타일</Link></li>
-                          <li><Link href="/category/어린이시계/2935/" className="text-gray-600 hover:text-black">어린이 시계</Link></li>
-                          <li><Link href="/category/장난감/2601/" className="text-gray-600 hover:text-black">장난감</Link></li>
-                          <li><Link href="/category/보드자석/2933/" className="text-gray-600 hover:text-black">보드/자석</Link></li>
-                          <li><Link href="/category/데코/2599/" className="text-gray-600 hover:text-black">데코</Link></li>
-                          <li><Link href="/category/어린이식기/2600/" className="text-gray-600 hover:text-black">어린이 식기</Link></li>
-                          <li><Link href="/category/문구/2612/" className="text-gray-600 hover:text-black">문구</Link></li>
-                          <li><Link href="/category/도서/2915/" className="text-gray-600 hover:text-black">도서</Link></li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div 
-                  className="relative"
-                  onMouseEnter={() => handleMenuEnter('book')}
-                >
-                  <Link 
-                    href="/category/book/3021/" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
-                  >
-                    Book
-                  </Link>
-
-                  {activeMenu === 'book' && (
-                    <div className="absolute top-full left-0 w-screen bg-white border-t shadow-lg">
-                      <div className="px-4 lg:px-8 py-6">
-                        <ul className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-                          <li><Link href="/category/book/3021/" className="text-gray-600 hover:text-black">전체</Link></li>
-                          <li><Link href="/category/아트북/287/" className="text-gray-600 hover:text-black">아트북</Link></li>
-                          <li><Link href="/category/매거진/504/" className="text-gray-600 hover:text-black">매거진</Link></li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
+                {/* Sale - 항상 표시 (중요) */}
                 <div 
                   className="relative"
                   onMouseEnter={() => handleMenuEnter('sale')}
                 >
                   <Link 
                     href="/category/sale/233/" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-red-600 hover:text-red-700"
+                    className="block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-red-600 hover:text-red-700 whitespace-nowrap"
                   >
                     Sale
                   </Link>
@@ -380,29 +304,58 @@ export default function Header() {
                   )}
                 </div>
 
-                <div className="w-px h-6 bg-gray-300 mx-4"></div>
+                {/* 더보기 메뉴 - 작은 화면에서 숨겨진 메뉴들 */}
+                <div 
+                  className="relative xl:hidden"
+                  onMouseEnter={handleMoreMenuEnter}
+                  onMouseLeave={handleMoreMenuLeave}
+                >
+                  <button className="flex items-center px-2 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap">
+                    <MoreHorizontal size={20} />
+                  </button>
+
+                  {showMoreMenu && (
+                    <div className="absolute top-full right-0 w-48 bg-white border shadow-lg rounded-lg z-50">
+                      <div className="py-2">
+                        <Link href="/category/kitchen/227/" className="block px-4 py-2 text-sm hover:bg-gray-50">Kitchen</Link>
+                        <Link href="/category/accessories/229/" className="block px-4 py-2 text-sm hover:bg-gray-50">Accessories</Link>
+                        <Link href="/category/textile/226/" className="block px-4 py-2 text-sm hover:bg-gray-50">Textile</Link>
+                        <Link href="/category/kids/2596/" className="block px-4 py-2 text-sm hover:bg-gray-50">Kids</Link>
+                        <Link href="/category/book/3021/" className="block px-4 py-2 text-sm hover:bg-gray-50">Book</Link>
+                        <div className="border-t my-1"></div>
+                        <Link href="/brands" className="block px-4 py-2 text-sm hover:bg-gray-50">Brands</Link>
+                        <Link href="/designers" className="block px-4 py-2 text-sm hover:bg-gray-50">Designers</Link>
+                        <Link href="/curation" className="block px-4 py-2 text-sm hover:bg-gray-50">Curation</Link>
+                        <Link href="/rdm" className="block px-4 py-2 text-sm hover:bg-gray-50">Rdm</Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 큰 화면에서만 표시되는 추가 메뉴들 */}
+                <div className="w-px h-6 bg-gray-300 mx-2 xl:mx-4 hidden 2xl:block"></div>
 
                 <Link 
                   href="/brands" 
-                  className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                  className="hidden 2xl:block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                 >
                   Brands
                 </Link>
 
                 <Link 
                   href="/designers" 
-                  className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                  className="hidden 2xl:block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                 >
                   Designers
                 </Link>
 
                 <div 
-                  className="relative"
+                  className="relative hidden 2xl:block"
                   onMouseEnter={() => handleMenuEnter('curation')}
                 >
                   <Link 
                     href="/curation" 
-                    className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                    className="block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                   >
                     Curation
                   </Link>
@@ -425,32 +378,32 @@ export default function Header() {
 
                 <Link 
                   href="/rdm" 
-                  className="block px-4 py-6 text-2xl font-medium font-serif text-gray-700 hover:text-black"
+                  className="hidden 2xl:block px-2 xl:px-3 py-4 xl:py-6 text-lg xl:text-xl font-medium font-serif text-gray-700 hover:text-black whitespace-nowrap"
                 >
                   Rdm
                 </Link>
 
               </nav>
 
-              {/* 오른쪽 아이콘들 */}
-              <div className="flex items-center space-x-4">
+              {/* 오른쪽 아이콘들 - 크기와 패딩 축소 */}
+              <div className="flex items-center space-x-1 xl:space-x-2 flex-shrink-0">
                 <button
                   onClick={() => setSearchOpen(true)}
-                  className="p-3 text-gray-600 hover:text-black"
+                  className="p-2 xl:p-3 text-gray-600 hover:text-black"
                 >
-                  <Search size={30} />
+                  <Search size={24} className="xl:w-7 xl:h-7" />
                 </button>
 
                 {user && (
-                  <Link href="/mypage/wishlist" className="p-3 text-gray-600 hover:text-black">
-                    <Heart size={30} />
+                  <Link href="/mypage/wishlist" className="p-2 xl:p-3 text-gray-600 hover:text-black">
+                    <Heart size={24} className="xl:w-7 xl:h-7" />
                   </Link>
                 )}
 
                 {user ? (
                   <div className="relative group">
-                    <button className="flex items-center p-3 text-gray-600 hover:text-black">
-                      <User size={30} />
+                    <button className="flex items-center p-2 xl:p-3 text-gray-600 hover:text-black">
+                      <User size={24} className="xl:w-7 xl:h-7" />
                     </button>
                     <div className="absolute -right-4 top-full mt-2 w-64 bg-white border shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                       <div className="p-3 border-b">
@@ -466,16 +419,16 @@ export default function Header() {
                     </div>
                   </div>
                 ) : (
-                  <Link href="/register" className="p-3 text-gray-600 hover:text-black">
-                    <User size={30} />
+                  <Link href="/register" className="p-2 xl:p-3 text-gray-600 hover:text-black">
+                    <User size={24} className="xl:w-7 xl:h-7" />
                   </Link>
                 )}
 
                 {user && (
-                  <Link href="/cart" className="relative p-3 text-gray-600 hover:text-black">
-                    <ShoppingBag size={30} />
+                  <Link href="/cart" className="relative p-2 xl:p-3 text-gray-600 hover:text-black">
+                    <ShoppingBag size={24} className="xl:w-7 xl:h-7" />
                     {totalItems > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-5 h-5 xl:w-6 xl:h-6 flex items-center justify-center">
                         {totalItems}
                       </span>
                     )}
