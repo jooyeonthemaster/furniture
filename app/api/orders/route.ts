@@ -52,6 +52,47 @@ export async function POST(request: NextRequest) {
 
     const products = await Promise.all(productPromises);
 
+    // 재고 확인 및 차감
+    for (const item of items) {
+      const product = products.find(p => p.id === item.productId);
+      if (!product) continue;
+
+             // 옵션이 있는 경우 옵션별 재고 확인 및 차감
+       if (item.selectedOptions && product.options) {
+         for (const [optionId, optionData] of Object.entries(item.selectedOptions)) {
+           const option = product.options.find((opt: any) => opt.id === optionId);
+           if (option) {
+             const value = option.values.find((val: any) => val.id === (optionData as any).valueId);
+             if (value && value.stockQuantity !== undefined) {
+               if (value.stockQuantity < item.quantity) {
+                 throw new Error(`${product.name} - ${(optionData as any).optionName}: ${(optionData as any).valueName} 옵션의 재고가 부족합니다. (재고: ${value.stockQuantity}개)`);
+               }
+               
+               // 옵션별 재고 차감
+               value.stockQuantity -= item.quantity;
+             }
+           }
+         }
+        
+        // 업데이트된 옵션 정보를 상품에 반영
+        await updateDoc(doc(db, 'products', item.productId), {
+          options: product.options,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        // 일반 재고 확인 및 차감
+        if (product.stock < item.quantity) {
+          throw new Error(`${product.name}의 재고가 부족합니다. (재고: ${product.stock}개)`);
+        }
+        
+        // 일반 재고 차감
+        await updateDoc(doc(db, 'products', item.productId), {
+          stock: product.stock - item.quantity,
+          updatedAt: serverTimestamp()
+        });
+      }
+    }
+
     // 주문 총액 계산
     const totalAmount = items.reduce((total: number, item: OrderItem) => {
       const product = products.find(p => p.id === item.productId);

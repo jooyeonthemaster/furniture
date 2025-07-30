@@ -23,6 +23,8 @@ export async function uploadToCloudinary(
     formData.append('file', file);
     formData.append('upload_preset', 'furniture'); // 클라우디너리에서 설정한 preset 이름
     formData.append('folder', folder);
+    
+    // Unsigned 업로드에서는 이미지 최적화 설정을 Upload Preset에서 설정해야 함
 
     console.log('업로드 시작:', file.name, '→', folder);
 
@@ -44,9 +46,15 @@ export async function uploadToCloudinary(
     const result = await uploadResponse.json();
     console.log('업로드 성공:', result.secure_url);
 
+    // 고품질 최적화된 URL 생성
+    const optimizedUrl = result.secure_url.replace(
+      '/upload/',
+      '/upload/f_auto,q_auto:best/'
+    );
+
     return {
       public_id: result.public_id,
-      secure_url: result.secure_url,
+      secure_url: optimizedUrl, // 최적화된 URL 반환
       width: result.width,
       height: result.height
     };

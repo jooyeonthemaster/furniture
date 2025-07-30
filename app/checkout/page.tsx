@@ -33,8 +33,8 @@ function CheckoutPageContent() {
   // 실제 사용할 아이템과 총액
   const items = isDirect ? directItems : cartItems;
   const totalAmount = isDirect 
-    ? directItems.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0)
-    : cartTotalAmount;
+    ? directItems.reduce((sum, item) => sum + ((item.finalPrice || item.salePrice) * item.quantity), 0)
+    : cartItems.reduce((sum, item) => sum + ((item.finalPrice || item.salePrice) * item.quantity), 0);
   
   const paymentWidgetRef = useRef<PaymentWidgetInstance | null>(null);
   const paymentMethodsWidgetRef = useRef<ReturnType<PaymentWidgetInstance['renderPaymentMethods']> | null>(null);
@@ -259,6 +259,7 @@ function CheckoutPageContent() {
           items: items.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
+            selectedOptions: item.selectedOptions,
           })),
           shippingAddress: {
             recipient: shippingAddress.recipient,
@@ -358,13 +359,39 @@ function CheckoutPageContent() {
                       <div className="flex-1">
                         <h4 className="font-medium text-sm">{item.name}</h4>
                         <p className="text-xs text-muted-foreground">{item.brand}</p>
-                        <p className="text-sm">
-                          {item.salePrice.toLocaleString()}원 × {item.quantity}
+                        
+                        {/* 선택된 옵션 표시 */}
+                        {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
+                          <div className="mt-1 space-y-1">
+                            {Object.values(item.selectedOptions).map((option: any, idx) => (
+                              <div key={idx} className="flex items-center space-x-2">
+                                <span className="text-xs text-muted-foreground">{option.optionName}:</span>
+                                <div className="flex items-center space-x-1">
+                                  {option.colorCode && (
+                                    <div
+                                      className="w-3 h-3 rounded-full border border-gray-300"
+                                      style={{ backgroundColor: option.colorCode }}
+                                    />
+                                  )}
+                                  <span className="text-xs font-medium">{option.valueName}</span>
+                                  {option.priceModifier && option.priceModifier !== 0 && (
+                                    <span className="text-xs text-primary">
+                                      ({option.priceModifier > 0 ? '+' : ''}{option.priceModifier.toLocaleString()}원)
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <p className="text-sm mt-1">
+                          {(item.finalPrice || item.salePrice).toLocaleString()}원 × {item.quantity}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="font-medium">
-                          {(item.salePrice * item.quantity).toLocaleString()}원
+                          {((item.finalPrice || item.salePrice) * item.quantity).toLocaleString()}원
                         </p>
                       </div>
                     </div>

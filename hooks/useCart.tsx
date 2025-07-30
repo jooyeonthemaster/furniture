@@ -12,6 +12,18 @@ export interface CartItem {
   salePrice: number;
   quantity: number;
   maxStock: number;
+  // 옵션 정보 추가
+  selectedOptions?: {
+    [optionId: string]: {
+      optionName: string;
+      valueId: string;
+      valueName: string;
+      colorCode?: string;
+      priceModifier?: number;
+    };
+  };
+  // 옵션 적용된 최종 가격
+  finalPrice?: number;
 }
 
 interface CartState {
@@ -23,10 +35,11 @@ interface CartState {
 
 interface CartContextType extends CartState {
   addItem: (product: Omit<CartItem, 'id' | 'quantity'>) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addItemWithOptions: (product: Omit<CartItem, 'id' | 'quantity'>, options?: CartItem['selectedOptions']) => void;
+  removeItem: (productId: string, optionKey?: string) => void;
+  updateQuantity: (productId: string, quantity: number, optionKey?: string) => void;
   clearCart: () => void;
-  getItemQuantity: (productId: string) => number;
+  getItemQuantity: (productId: string, optionKey?: string) => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -58,7 +71,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // 총 개수와 총 금액 계산
   useEffect(() => {
     const totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
-    const totalAmount = state.items.reduce((sum, item) => sum + (item.salePrice * item.quantity), 0);
+    const totalAmount = state.items.reduce((sum, item) => sum + ((item.finalPrice || item.salePrice) * item.quantity), 0);
     
     setState(prev => ({
       ...prev,
@@ -72,27 +85,52 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('cart', JSON.stringify({ items: state.items }));
   }, [state.items]);
 
+  // 옵션 키 생성 함수
+  const getOptionKey = (productId: string, options?: CartItem['selectedOptions']) => {
+    if (!options || Object.keys(options).length === 0) {
+      return productId;
+    }
+    
+    const optionString = Object.values(options)
+      .map(opt => `${opt.optionName}:${opt.valueName}`)
+      .sort()
+      .join('|');
+    
+    return `${productId}_${btoa(optionString)}`;
+  };
+
   const addItem = (product: Omit<CartItem, 'id' | 'quantity'>) => {
+    addItemWithOptions(product, undefined);
+  };
+
+  const addItemWithOptions = (product: Omit<CartItem, 'id' | 'quantity'>, options?: CartItem['selectedOptions']) => {
     setState(prev => {
-      const existingItem = prev.items.find(item => item.productId === product.productId);
+      const optionKey = getOptionKey(product.productId, options);
+      const existingItem = prev.items.find(item => item.id === optionKey);
+      
+      // 옵션 가격 modifier 계산
+      const priceModifier = options ? Object.values(options).reduce((sum, opt) => sum + (opt.priceModifier || 0), 0) : 0;
+      const finalPrice = product.salePrice + priceModifier;
       
       if (existingItem) {
-        // 이미 있는 상품이면 수량 증가
+        // 이미 있는 상품+옵션 조합이면 수량 증가
         const newQuantity = Math.min(existingItem.quantity + 1, product.maxStock);
         return {
           ...prev,
           items: prev.items.map(item =>
-            item.productId === product.productId
+            item.id === optionKey
               ? { ...item, quantity: newQuantity }
               : item
           ),
         };
       } else {
-        // 새 상품 추가
+        // 새 상품+옵션 조합 추가
         const newItem: CartItem = {
           ...product,
-          id: Date.now().toString(),
+          id: optionKey,
           quantity: 1,
+          selectedOptions: options,
+          finalPrice,
         };
         return {
           ...prev,
@@ -102,23 +140,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const removeItem = (productId: string) => {
+  const removeItem = (productId: string, optionKey?: string) => {
+    const itemId = optionKey || productId;
     setState(prev => ({
       ...prev,
-      items: prev.items.filter(item => item.productId !== productId),
+      items: prev.items.filter(item => item.id !== itemId),
     }));
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number, optionKey?: string) => {
+    const itemId = optionKey || productId;
+    
     if (quantity <= 0) {
-      removeItem(productId);
+      removeItem(productId, optionKey);
       return;
     }
 
     setState(prev => ({
       ...prev,
       items: prev.items.map(item =>
-        item.productId === productId
+        item.id === itemId
           ? { ...item, quantity: Math.min(quantity, item.maxStock) }
           : item
       ),
@@ -132,8 +173,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  const getItemQuantity = (productId: string): number => {
-    const item = state.items.find(item => item.productId === productId);
+  const getItemQuantity = (productId: string, optionKey?: string): number => {
+    const itemId = optionKey || productId;
+    const item = state.items.find(item => item.id === itemId);
     return item ? item.quantity : 0;
   };
 
@@ -142,6 +184,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       value={{
         ...state,
         addItem,
+        addItemWithOptions,
         removeItem,
         updateQuantity,
         clearCart,

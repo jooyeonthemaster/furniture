@@ -18,16 +18,41 @@ import { Product } from '@/types';
 
 const PRODUCTS_COLLECTION = 'products';
 
+// Firebase에서 undefined 값을 제거하는 유틸리티 함수
+function removeUndefinedValues(obj: any): any {
+  const result: any = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+        // 중첩 객체의 undefined 값도 제거
+        const cleanedValue = removeUndefinedValues(value);
+        if (Object.keys(cleanedValue).length > 0) {
+          result[key] = cleanedValue;
+        }
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+  
+  return result;
+}
+
 // 상품 추가
 export async function addProduct(productData: Omit<Product, 'id'>) {
   try {
-    const docRef = await addDoc(collection(db, PRODUCTS_COLLECTION), {
+    // undefined 값을 제거하고 기본값 설정
+    const cleanedData = removeUndefinedValues({
       ...productData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      // 기본값 설정  
       views: productData.views || 0,
       likes: productData.likes || 0
+    });
+
+    const docRef = await addDoc(collection(db, PRODUCTS_COLLECTION), {
+      ...cleanedData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
     
     return docRef.id;
@@ -420,5 +445,140 @@ export async function searchProducts(searchTerm: string, category?: string): Pro
   } catch (error) {
     console.error('상품 검색 실패:', error);
     throw new Error('상품 검색에 실패했습니다.');
+  }
+}
+
+// 상품 복사를 위한 헬퍼 함수들
+export function generateCopyName(originalName: string): string {
+  const copyPattern = /\s*\(복사\s*(\d*)\)\s*$/;
+  const match = originalName.match(copyPattern);
+  
+  if (match) {
+    const number = match[1] ? parseInt(match[1]) + 1 : 2;
+    return originalName.replace(copyPattern, ` (복사 ${number})`);
+  } else {
+    return `${originalName} (복사)`;
+  }
+}
+
+export function generateNewOptionIds(options: any[]): any[] {
+  return options.map(option => ({
+    ...option,
+    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    values: option.values.map((value: any) => ({
+      ...value,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 3)
+    }))
+  }));
+}
+
+export function createCopyFromProduct(originalProduct: Product): Omit<Product, 'id'> {
+  const copyData = {
+    // 기본 정보 (복사된 이름)
+    name: generateCopyName(originalProduct.name),
+    brand: originalProduct.brand || '',
+    designer: originalProduct.designer || '',
+    category: originalProduct.category,
+    subcategory: originalProduct.subcategory || '',
+    model: originalProduct.model || '',
+    sku: originalProduct.sku ? `${originalProduct.sku}-COPY` : '',
+    
+    // 가격 정보 (동일하게 복사)
+    originalPrice: originalProduct.originalPrice,
+    salePrice: originalProduct.salePrice,
+    discount: originalProduct.discount || 0,
+    
+    // 상태 정보 (동일하게 복사)
+    condition: originalProduct.condition,
+    availability: originalProduct.availability,
+    
+    // 설명 (모든 설명 정보 복사)
+    description: originalProduct.description || '',
+    overviewDescription: originalProduct.overviewDescription || '',
+    overviewImages: originalProduct.overviewImages || [],
+    detailedDescription: originalProduct.detailedDescription || '',
+    conditionReport: originalProduct.conditionReport || '',
+    usageGuide: originalProduct.usageGuide || '',
+    
+    // 사양 및 속성 (동일하게 복사)
+    dimensions: originalProduct.dimensions || '',
+    materials: originalProduct.materials || '',
+    colors: originalProduct.colors || [],
+    specifications: originalProduct.specifications || '',
+    
+    // 이미지 (동일한 URL 사용)
+    images: originalProduct.images || [],
+    
+    // 재고 및 상태 (초기값으로 설정)
+    stock: originalProduct.stock || 0,
+    featured: false, // 복사본은 추천에서 제외
+    
+    // 소스 정보 (복사임을 표시)
+    source: originalProduct.source || '',
+    sourceDetails: originalProduct.sourceDetails ? `${originalProduct.sourceDetails} (복사본)` : '복사본',
+    sourceLocation: originalProduct.sourceLocation || '',
+    sourceDate: originalProduct.sourceDate || '',
+    sourceUsage: originalProduct.sourceUsage || '',
+    
+    // 옵션 (새로운 ID로 복사)
+    hasOptions: originalProduct.hasOptions || false,
+    options: originalProduct.options && originalProduct.options.length > 0 ? generateNewOptionIds(originalProduct.options) : [],
+    
+    // 연관 상품 (빈 배열로 초기화)
+    relatedProducts: [],
+    
+    // 태그 (동일하게 복사하되 '복사본' 태그 추가)
+    tags: [...(originalProduct.tags || []), '복사본'],
+    
+    // 배송 정보 (동일하게 복사)
+    shipping: originalProduct.shipping || '',
+    
+    // 통계 (초기화)
+    views: 0,
+    likes: 0,
+    
+    // 타임스탬프 (새로 생성)
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  // undefined 값들을 제거하고 반환
+  return removeUndefinedValues(copyData);
+}
+
+// 상품 복사 함수
+export async function copyProduct(productId: string): Promise<string> {
+  try {
+    console.log('🔄 상품 복사 시작:', productId);
+    
+    // 원본 상품 조회
+    const originalProduct = await getProduct(productId);
+    if (!originalProduct) {
+      throw new Error('복사할 상품을 찾을 수 없습니다.');
+    }
+    
+    // 복사본 데이터 생성
+    const copyData = createCopyFromProduct(originalProduct);
+    
+    console.log('📝 복사본 데이터 생성 완료:', {
+      original: originalProduct.name,
+      copy: copyData.name,
+      hasOptions: copyData.hasOptions,
+      optionsCount: copyData.options?.length || 0
+    });
+    
+    // 새 상품으로 추가
+    const newProductId = await addProduct(copyData);
+    
+    console.log('✅ 상품 복사 완료:', { 
+      originalId: productId,
+      newId: newProductId,
+      newName: copyData.name 
+    });
+    
+    return newProductId;
+  } catch (error) {
+    console.error('❌ 상품 복사 실패:', error);
+    throw new Error(`상품 복사에 실패했습니다: ${(error as Error).message}`);
   }
 }

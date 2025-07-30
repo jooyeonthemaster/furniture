@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { 
   Plus, Search, Filter, MoreHorizontal, Edit, Trash2, 
-  Eye, Star, TrendingUp, Package, DollarSign
+  Eye, Star, TrendingUp, Package, DollarSign, Copy
 } from 'lucide-react';
 import { getAllProducts, deleteProduct } from '@/lib/products';
 import { Product } from '@/types';
@@ -439,6 +439,14 @@ export default function AdminProductsPage() {
                         title="수정"
                       >
                         <Edit className="w-4 h-4 text-muted-foreground" />
+                      </Link>
+                      
+                      <Link
+                        href={`/admin/manage/add/copy/${product.id}`}
+                        className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg"
+                        title="복사"
+                      >
+                        <Copy className="w-4 h-4" />
                       </Link>
                       
                       <button

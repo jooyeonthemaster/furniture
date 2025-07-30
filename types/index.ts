@@ -37,6 +37,32 @@ export interface Admin extends User {
   permissions: string[];
 }
 
+// Product Option Types
+export interface ProductOption {
+  id: string;
+  name: string; // 옵션명 (예: "색상", "사이즈", "재질")
+  type: 'color' | 'size' | 'material' | 'style' | 'custom'; // 옵션 타입
+  values: ProductOptionValue[]; // 옵션 값들
+  required: boolean; // 필수 선택 여부
+  displayOrder: number; // 표시 순서
+}
+
+export interface ProductOptionValue {
+  id: string;
+  value: string; // 옵션 값 (예: "블루", "L", "가죽")
+  displayName?: string; // 표시명 (값과 다르게 표시하고 싶을 때)
+  priceModifier?: number; // 가격 변동 (예: +10000, -5000)
+  stockQuantity?: number; // 해당 옵션의 재고 수량
+  isAvailable: boolean; // 현재 선택 가능 여부
+  colorCode?: string; // 색상 옵션인 경우 색상 코드
+  imageUrl?: string; // 옵션별 이미지 URL
+}
+
+// 선택된 옵션 조합
+export interface SelectedOptions {
+  [optionId: string]: string; // optionId: selectedValueId
+}
+
 // Product Types
 export interface Product {
   id: string;
@@ -73,6 +99,9 @@ export interface Product {
   sourceDate?: string;
   sourceUsage?: string;
   tags: string[];
+  // 상품 옵션 필드 추가
+  hasOptions?: boolean; // 옵션이 있는 상품인지 여부
+  options?: ProductOption[]; // 상품 옵션들
   // 연계 상품 추천 기능
   relatedProducts?: string[]; // 연계 상품 ID 배열
   // 상세 설명
@@ -265,6 +294,15 @@ export interface OrderItem {
   originalPrice: number;
   discount: number;
   product?: Product; // populated product data
+  selectedOptions?: {
+    [optionId: string]: {
+      optionName: string;
+      valueId: string;
+      valueName: string;
+      colorCode?: string;
+      priceModifier?: number;
+    };
+  };
 }
 
 export type OrderStatus = 

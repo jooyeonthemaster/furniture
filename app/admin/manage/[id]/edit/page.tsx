@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Eye, Upload, X, Plus, Star, Search, Link2 } from 'lucide-react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { ArrowLeft, Save, Eye, Upload, X, Plus, Star, Search, Link2, Settings, Copy } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import SectionParser from '@/components/admin/SectionParser';
@@ -31,6 +31,10 @@ interface ProductForm {
   // 재고 및 상태
   stockCount: number;
   availability: string;
+  
+  // 옵션 설정
+  hasOptions: boolean;
+  options: import('@/types').ProductOption[];
   
   // 설명
   description: string;
@@ -126,6 +130,8 @@ const initialForm: ProductForm = {
   condition: 'excellent',
   stockCount: 1,
   availability: 'in_stock',
+  hasOptions: false,
+  options: [],
   description: '',
   // 상품 개요 초기값 추가
   overviewDescription: '',
@@ -196,13 +202,24 @@ const sourceTypes = [
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const productId = params.id as string;
+  const isCopied = searchParams.get('copied') === 'true';
   
   const [form, setForm] = useState<ProductForm>(initialForm);
   const [currentTab, setCurrentTab] = useState('basic');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [newTag, setNewTag] = useState('');
+  const [showCopyAlert, setShowCopyAlert] = useState(isCopied);
+  
+  // 옵션 관리 상태
+  const [newOptionName, setNewOptionName] = useState('');
+  const [newOptionType, setNewOptionType] = useState<'color' | 'size' | 'material' | 'style' | 'custom'>('color');
+  const [newOptionValue, setNewOptionValue] = useState('');
+  const [newOptionStock, setNewOptionStock] = useState<number | ''>('');
+  const [newColorCode, setNewColorCode] = useState<string>('#000000');
+  const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
   
   // 연계 상품 관련 상태
   const [searchTerm, setSearchTerm] = useState('');
@@ -246,6 +263,8 @@ export default function EditProductPage() {
             condition: productData.condition || 'excellent',
             stockCount: productData.stock || 1,
             availability: productData.availability || 'in_stock',
+            hasOptions: productData.hasOptions || false,
+            options: productData.options || [],
             description: productData.description || '',
             overviewDescription: productData.overviewDescription || '',
             overviewImages: productData.overviewImages?.map((url: string, index: number) => ({
@@ -358,6 +377,79 @@ export default function EditProductPage() {
     }
   };
 
+  // 옵션 관리 함수들
+  const handleAddOption = () => {
+    if (!newOptionName.trim()) return;
+
+    const newOption: import('@/types').ProductOption = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      name: newOptionName.trim(),
+      type: newOptionType,
+      values: [],
+      required: false,
+      displayOrder: form.options.length
+    };
+
+    handleInputChange('options', [...form.options, newOption]);
+    setNewOptionName('');
+  };
+
+  const handleRemoveOption = (optionId: string) => {
+    const updatedOptions = form.options.filter(option => option.id !== optionId);
+    handleInputChange('options', updatedOptions);
+  };
+
+  const handleAddOptionValue = (optionId: string, value: string, stock: number, colorCode?: string) => {
+    if (!value.trim()) return;
+
+    const updatedOptions = form.options.map(option => {
+      if (option.id === optionId) {
+        const newValue: import('@/types').ProductOptionValue = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          value: value.trim(),
+          stockQuantity: stock,
+          isAvailable: true,
+          ...(colorCode && { colorCode })
+        };
+        return {
+          ...option,
+          values: [...option.values, newValue]
+        };
+      }
+      return option;
+    });
+
+    handleInputChange('options', updatedOptions);
+    setNewOptionValue('');
+    setNewOptionStock('');
+    setNewColorCode('#000000');
+  };
+
+  const handleRemoveOptionValue = (optionId: string, valueId: string) => {
+    const updatedOptions = form.options.map(option => {
+      if (option.id === optionId) {
+        return {
+          ...option,
+          values: option.values.filter(value => value.id !== valueId)
+        };
+      }
+      return option;
+    });
+
+    handleInputChange('options', updatedOptions);
+  };
+
+  const handleToggleOptionRequired = (optionId: string) => {
+    const updatedOptions = form.options.map(option => {
+      if (option.id === optionId) {
+        return { ...option, required: !option.required };
+      }
+      return option;
+    });
+
+    handleInputChange('options', updatedOptions);
+  };
+
   // 연계 상품 관련 함수들
   const searchRelatedProducts = async () => {
     if (!searchTerm.trim() && !selectedCategory) return;
@@ -447,6 +539,10 @@ export default function EditProductPage() {
         
         // 이미지
         images: form.images.length > 0 ? form.images.map(img => typeof img === 'string' ? img : img.url) : ['/placeholder-product.jpg'],
+        
+        // 상품 옵션
+        hasOptions: form.hasOptions,
+        options: form.hasOptions ? form.options : undefined,
         
         // 치수 정보
         dimensions: form.specifications.dimensions ? {
@@ -657,6 +753,204 @@ export default function EditProductPage() {
         <label htmlFor="featured" className="text-sm font-medium">
           추천 상품으로 설정
         </label>
+      </div>
+
+      {/* 상품 옵션 */}
+      <div className="bg-background border rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">상품 옵션</h3>
+          <div className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              id="hasOptions"
+              checked={form.hasOptions}
+              onChange={(e) => {
+                handleInputChange('hasOptions', e.target.checked);
+                if (!e.target.checked) {
+                  handleInputChange('options', []);
+                }
+              }}
+              className="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded"
+            />
+            <label htmlFor="hasOptions" className="text-sm font-medium">
+              이 상품에 옵션 설정하기
+            </label>
+          </div>
+        </div>
+
+                 {form.hasOptions && (
+           <div className="space-y-6">
+             {/* 옵션 추가 폼 */}
+             <div className="p-4 bg-muted rounded-lg">
+               <h4 className="text-sm font-medium mb-3">새 옵션 추가</h4>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div>
+                   <label className="block text-xs font-medium mb-1">옵션명</label>
+                   <input
+                     type="text"
+                     value={newOptionName}
+                     onChange={(e) => setNewOptionName(e.target.value)}
+                     className="w-full p-2 border rounded focus:ring-2 focus:ring-primary text-sm"
+                     placeholder="예: 색상, 사이즈, 재질"
+                   />
+                 </div>
+                 <div>
+                   <label className="block text-xs font-medium mb-1">옵션 타입</label>
+                   <select
+                     value={newOptionType}
+                     onChange={(e) => setNewOptionType(e.target.value as any)}
+                     className="w-full p-2 border rounded focus:ring-2 focus:ring-primary text-sm"
+                   >
+                     <option value="color">색상</option>
+                     <option value="size">사이즈</option>
+                     <option value="material">재질</option>
+                     <option value="style">스타일</option>
+                     <option value="custom">기타</option>
+                   </select>
+                 </div>
+                 <div className="flex items-end">
+                   <button
+                     type="button"
+                     onClick={handleAddOption}
+                     className="w-full px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors flex items-center justify-center space-x-2 text-sm"
+                   >
+                     <Plus className="w-4 h-4" />
+                     <span>옵션 추가</span>
+                   </button>
+                 </div>
+               </div>
+             </div>
+
+             {/* 기존 옵션들 */}
+             {form.options.length > 0 && (
+               <div className="space-y-4">
+                 <h4 className="text-sm font-medium">설정된 옵션들</h4>
+                 {form.options.map((option, index) => (
+                   <div key={option.id} className="p-4 border rounded-lg">
+                     <div className="flex items-center justify-between mb-3">
+                       <div className="flex items-center space-x-3">
+                         <h5 className="font-medium">{option.name}</h5>
+                         <span className="text-xs px-2 py-1 bg-muted rounded">
+                           {option.type === 'color' && '색상'}
+                           {option.type === 'size' && '사이즈'}
+                           {option.type === 'material' && '재질'}
+                           {option.type === 'style' && '스타일'}
+                           {option.type === 'custom' && '기타'}
+                         </span>
+                         <div className="flex items-center space-x-2">
+                           <input
+                             type="checkbox"
+                             id={`required-${option.id}`}
+                             checked={option.required}
+                             onChange={() => handleToggleOptionRequired(option.id)}
+                             className="w-3 h-3 text-primary focus:ring-primary border-gray-300 rounded"
+                           />
+                           <label htmlFor={`required-${option.id}`} className="text-xs text-muted-foreground">
+                             필수 선택
+                           </label>
+                         </div>
+                       </div>
+                       <button
+                         type="button"
+                         onClick={() => handleRemoveOption(option.id)}
+                         className="text-red-500 hover:text-red-700"
+                       >
+                         <X className="w-4 h-4" />
+                       </button>
+                     </div>
+
+                     {/* 옵션 값들 */}
+                     <div className="space-y-2">
+                                                                                               <div className="flex flex-wrap gap-2">
+                           {option.values.map((value) => (
+                             <div
+                               key={value.id}
+                               className="inline-flex items-center space-x-2 px-3 py-1 bg-secondary rounded-lg text-sm"
+                             >
+                               {option.type === 'color' && value.colorCode && (
+                                 <div 
+                                   className="w-4 h-4 rounded-full border border-gray-300"
+                                   style={{ backgroundColor: value.colorCode }}
+                                 />
+                               )}
+                               <span>{value.value}</span>
+                               {value.stockQuantity !== undefined && (
+                                 <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
+                                   재고: {value.stockQuantity}개
+                                 </span>
+                               )}
+                               <button
+                                 type="button"
+                                 onClick={() => handleRemoveOptionValue(option.id, value.id)}
+                                 className="text-muted-foreground hover:text-foreground"
+                               >
+                                 <X className="w-3 h-3" />
+                               </button>
+                             </div>
+                           ))}
+                         </div>
+
+                                               {/* 옵션 값 추가 */}
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                            <input
+                              type="text"
+                              value={editingOptionId === option.id ? newOptionValue : ''}
+                              onChange={(e) => setNewOptionValue(e.target.value)}
+                              onFocus={() => setEditingOptionId(option.id)}
+                              className="p-2 border rounded focus:ring-2 focus:ring-primary text-sm"
+                              placeholder="옵션 값 (예: 블루, L, 가죽)"
+                            />
+                            <input
+                              type="number"
+                              value={editingOptionId === option.id ? (newOptionStock || '') : ''}
+                              onChange={(e) => setNewOptionStock(Number(e.target.value))}
+                              onFocus={() => setEditingOptionId(option.id)}
+                              className="p-2 border rounded focus:ring-2 focus:ring-primary text-sm"
+                              placeholder="재고 수량"
+                              min="0"
+                            />
+                            {option.type === 'color' && (
+                              <input
+                                type="color"
+                                value={editingOptionId === option.id ? (newColorCode || '#000000') : '#000000'}
+                                onChange={(e) => setNewColorCode(e.target.value)}
+                                onFocus={() => setEditingOptionId(option.id)}
+                                className="p-1 border rounded focus:ring-2 focus:ring-primary w-full h-10"
+                                title="색상 선택"
+                              />
+                            )}
+                            <div className="flex space-x-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleAddOptionValue(option.id, newOptionValue, Number(newOptionStock) || 0, option.type === 'color' ? newColorCode : undefined);
+                                  setEditingOptionId(null);
+                                }}
+                                className="px-3 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors text-sm"
+                              >
+                                추가
+                              </button>
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {option.type === 'color' ? '색상 옵션의 경우 색상 코드도 선택해주세요' : '옵션 값 입력 후 추가 버튼을 클릭하세요'}
+                          </div>
+                        </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             )}
+
+             {form.options.length === 0 && (
+               <div className="text-center py-6 text-muted-foreground">
+                 <Settings className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                 <p className="text-sm">위에서 옵션을 추가하여 상품의 선택 옵션을 설정하세요</p>
+               </div>
+             )}
+           </div>
+         )}
       </div>
 
       <div>
@@ -1185,6 +1479,36 @@ Herman Miller Aeron Chair는 1994년 출시 이후 전 세계 오피스 가구�
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto p-6">
+        {/* 복사 완료 알림 */}
+        {showCopyAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <Copy className="w-3 h-3 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-green-800 font-medium">상품 복사 완료!</h3>
+                  <p className="text-green-700 text-sm">
+                    원본 상품이 성공적으로 복사되었습니다. 필요한 정보를 수정한 후 저장하세요.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCopyAlert(false)}
+                className="text-green-600 hover:text-green-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* 헤더 */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">

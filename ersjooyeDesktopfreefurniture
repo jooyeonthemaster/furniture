@@ -1,0 +1,5 @@
+[33mf1aa265[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: admin layout useAuthState import error & enhance product detail back button UI
+[33maf1062a[m fix: 빌드 에러 수정 및 관리자 상품 등록 기능 개선
+[33ma78e32b[m feat: 관리자 페이지 개선 및 상세페이지 정보 확장
+[33me56232f[m feat: 연계 상품 추천 기능 완료 및 빌드 에러 수정
+[33m83e7e56[m feat: 완전한 가구 전자상거래 플랫폼 구현
