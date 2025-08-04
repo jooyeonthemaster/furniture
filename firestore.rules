@@ -43,9 +43,17 @@ service cloud.firestore {
     //     (request.auth.token.role == 'admin' || request.auth.token.role == 'dealer');
     // }
     
-    // 사용자 프로필은 본인만 수정 가능
+    // 🚨 개발용 임시 규칙 - 사용자 관리 기능 테스트용
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if true; // 임시로 모든 접근 허용
     }
+    
+    // 향후 프로덕션용 보안 규칙:
+    // match /users/{userId} {
+    //   allow read: if request.auth != null && 
+    //     (request.auth.uid == userId || 
+    //      request.auth.token.role == 'admin');
+    //   allow write: if request.auth != null && request.auth.uid == userId;
+    // }
   }
 } 

@@ -9,6 +9,20 @@ export interface User {
   phoneNumber?: string;
   createdAt: Date;
   updatedAt: Date;
+  // 사용자 관리용 추가 필드들
+  points?: number; // 적립금
+  group?: string; // 사용자 그룹
+  memo?: string; // 관리자 메모
+  stats?: {
+    posts: number; // 게시글 수
+    comments: number; // 댓글 수
+    reviews: number; // 구매평 수
+    inquiries: number; // 문의 수
+  };
+  totalPurchases?: number; // 총 구매 횟수
+  totalSpent?: number; // 누적 구매 금액
+  lastLoginAt?: Date; // 마지막 로그인 일시
+  isActive?: boolean; // 활성 상태
 }
 
 export interface Customer extends User {
