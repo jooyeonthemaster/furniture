@@ -202,7 +202,7 @@ export function useEditProduct(productId: string) {
         
         // 상품 옵션
         hasOptions: form.hasOptions,
-        options: form.hasOptions ? form.options : undefined,
+        options: form.hasOptions ? form.options : [],
         
         // 치수 정보
         dimensions: form.specifications.dimensions ? {

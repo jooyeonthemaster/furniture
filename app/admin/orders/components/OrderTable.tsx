@@ -397,6 +397,7 @@ export function OrderTable({
                           className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                           <option value="">택배사 선택</option>
+                          <option value="직접배송">직접배송</option>
                           <option value="CJ대한통운">CJ대한통운</option>
                           <option value="한진택배">한진택배</option>
                           <option value="롯데택배">롯데택배</option>
@@ -407,13 +408,18 @@ export function OrderTable({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-1">송장번호</label>
+                        <label className="block text-sm font-medium mb-1">
+                          송장번호 {shippingForm.carrier === '직접배송' && <span className="text-gray-500">(직접배송 시 선택사항)</span>}
+                        </label>
                         <input
                           type="text"
                           value={shippingForm.trackingNumber}
                           onChange={(e) => setShippingForm(prev => ({ ...prev, trackingNumber: e.target.value }))}
-                          placeholder="송장번호를 입력하세요"
-                          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder={shippingForm.carrier === '직접배송' ? '필요시 참조번호를 입력하세요' : '송장번호를 입력하세요'}
+                          disabled={shippingForm.carrier === '직접배송' ? false : false}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            shippingForm.carrier === '직접배송' ? 'bg-gray-50' : ''
+                          }`}
                         />
                       </div>
                     </div>
@@ -432,7 +438,7 @@ export function OrderTable({
                     <div className="flex items-center space-x-3">
                       <button
                         onClick={() => handleShippingSave(order.id)}
-                        disabled={!shippingForm.carrier || !shippingForm.trackingNumber}
+                        disabled={!shippingForm.carrier || (shippingForm.carrier !== '직접배송' && !shippingForm.trackingNumber)}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                       >
                         <Truck className="w-4 h-4" />

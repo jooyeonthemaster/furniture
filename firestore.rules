@@ -31,6 +31,11 @@ service cloud.firestore {
       allow write: if request.auth != null && resource.data.customerId == request.auth.uid;
     }
     
+    // 반품 관리 규칙 (개발용 - 모든 접근 허용)
+    match /returns/{returnId} {
+      allow read, write: if true; // 개발 단계에서 모든 접근 허용
+    }
+    
     // 🚨 현재: 개발용 임시 규칙 (보안 위험!)
     match /products/{productId} {
       allow read, write: if true; // 임시로 모든 접근 허용

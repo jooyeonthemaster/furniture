@@ -430,6 +430,55 @@ export interface DealerAnalytics {
   customerSatisfaction: number;
 }
 
+// 반품 관련 타입
+export interface ReturnRequest {
+  id?: string;
+  orderId: string;
+  customerId: string;
+  items: ReturnItem[];
+  reason: ReturnReason;
+  description: string;
+  returnMethod: ReturnMethod;
+  status: ReturnStatus;
+  requestedAt: string;
+  processedAt?: string;
+  completedAt?: string;
+  refundAmount?: number;
+  notes?: string;
+  images?: string[]; // 반품 사유 증빙 이미지
+}
+
+export interface ReturnItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  price: number;
+  reason: string;
+}
+
+export type ReturnReason = 
+  | 'defective'           // 상품 불량
+  | 'different_from_description' // 설명과 다름
+  | 'size_mismatch'       // 사이즈 불일치
+  | 'color_mismatch'      // 색상 불일치
+  | 'damaged_delivery'    // 배송 중 파손
+  | 'changed_mind'        // 단순 변심
+  | 'quality_issue'       // 품질 문제
+  | 'other';             // 기타
+
+export type ReturnMethod = 
+  | 'pickup'             // 택배 수거
+  | 'direct_delivery'    // 직접 반납
+  | 'store_visit';       // 매장 방문
+
+export type ReturnStatus = 
+  | 'requested'          // 반품 신청
+  | 'approved'           // 반품 승인
+  | 'rejected'           // 반품 거부
+  | 'in_progress'        // 반품 진행중
+  | 'completed'          // 반품 완료
+  | 'refunded';          // 환불 완료
+
 // 마이페이지 대시보드용 요약 타입
 export interface CustomerDashboard {
   totalOrders: number;

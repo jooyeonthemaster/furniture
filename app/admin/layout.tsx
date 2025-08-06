@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, Package, Users, BarChart3, Settings, 
-  LogOut, Menu, X, Plus, Search, Bell, ShoppingCart
+  LogOut, Menu, X, Plus, Search, Bell, ShoppingCart, RotateCcw
 } from 'lucide-react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signOut } from 'firebase/auth';
@@ -16,6 +16,7 @@ const navigationItems = [
   { name: '대시보드', href: '/admin', icon: LayoutDashboard },
   { name: '상품 관리', href: '/admin/manage', icon: Package },
   { name: '주문 관리', href: '/admin/orders', icon: ShoppingCart },
+  { name: '반품 관리', href: '/admin/returns', icon: RotateCcw },
   { name: '사용자 관리', href: '/admin/users', icon: Users },
   { name: '통계', href: '/admin/analytics', icon: BarChart3 },
   { name: '설정', href: '/admin/settings', icon: Settings },

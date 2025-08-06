@@ -20,12 +20,13 @@ import {
   User,
   ChevronRight,
   Search,
-  Filter
+  Filter,
+  RotateCcw
 } from 'lucide-react';
 import { Order, OrderStatus, PaymentStatus } from '@/types';
 
 export default function OrdersPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,12 +35,18 @@ export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    // 인증 로딩 중이면 대기
+    if (authLoading) {
+      return;
+    }
+
+    // 인증이 완료되었는데 사용자가 없으면 로그인 페이지로 이동
     if (!user) {
       router.push('/register?redirect=/mypage/orders');
       return;
     }
     fetchOrders();
-  }, [user, router]);
+  }, [user, router, authLoading]);
 
   const fetchOrders = async () => {
     try {
@@ -378,6 +385,27 @@ export default function OrdersPage() {
                         <span>배송 추적</span>
                       </Link>
                     )}
+                    {/* 반품 신청 버튼: 배송 완료 상태인 경우만 표시 */}
+                    {(() => {
+                      // 디버깅을 위한 로그
+                      if (order.status === 'delivered') {
+                        console.log(`주문 ${order.id} 반품 버튼 조건 확인:`, {
+                          status: order.status,
+                          paymentStatus: order.paymentStatus,
+                          canReturn: order.status === 'delivered'
+                        });
+                      }
+                      
+                      return order.status === 'delivered' && (
+                        <Link
+                          href={`/mypage/returns?orderId=${order.id}`}
+                          className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          <span>반품 신청</span>
+                        </Link>
+                      );
+                    })()}
                     <Link
                       href={`/mypage/orders/${order.id}`}
                       className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"

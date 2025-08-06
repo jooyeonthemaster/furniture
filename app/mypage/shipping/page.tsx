@@ -25,7 +25,7 @@ import {
 import { Order, ShippingInfo, TrackingEvent, ShippingStatus } from '@/types';
 
 function ShippingPageContent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
@@ -38,12 +38,18 @@ function ShippingPageContent() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    // 인증 로딩 중이면 대기
+    if (authLoading) {
+      return;
+    }
+
+    // 인증이 완료되었는데 사용자가 없으면 로그인 페이지로 이동
     if (!user) {
       router.push('/register?redirect=/mypage/shipping');
       return;
     }
     fetchShippingOrders();
-  }, [user, router]);
+  }, [user, router, authLoading]);
 
   useEffect(() => {
     if (orderId && orders.length > 0) {

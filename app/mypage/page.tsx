@@ -19,12 +19,13 @@ import {
   AlertCircle,
   ArrowRight,
   Home,
-  MapPin
+  MapPin,
+  RotateCcw
 } from 'lucide-react';
 import { Order, CustomerDashboard } from '@/types';
 
 export default function MyPage() {
-  const { user, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { wishlistCount } = useWishlist();
   const router = useRouter();
   
@@ -33,6 +34,12 @@ export default function MyPage() {
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
 
   useEffect(() => {
+    // 인증 로딩 중이면 대기
+    if (authLoading) {
+      return;
+    }
+
+    // 인증이 완료되었는데 사용자가 없으면 로그인 페이지로 이동
     if (!user) {
       router.push('/register?redirect=/mypage');
       return;
@@ -79,7 +86,7 @@ export default function MyPage() {
     };
 
     fetchDashboardData();
-  }, [user, router, wishlistCount]);
+  }, [user, router, wishlistCount, authLoading]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,12 +120,15 @@ export default function MyPage() {
     return statusMap[status] || status;
   };
 
-  if (loading) {
+  // 인증 로딩 중이거나 데이터 로딩 중일 때
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">정보를 불러오는 중...</p>
+          <p className="text-muted-foreground">
+            {authLoading ? '인증 상태 확인 중...' : '정보를 불러오는 중...'}
+          </p>
         </div>
       </div>
     );
@@ -338,6 +348,15 @@ export default function MyPage() {
                 >
                   <Truck className="w-5 h-5 text-muted-foreground" />
                   <span>배송 조회</span>
+                  <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </Link>
+                
+                <Link
+                  href="/mypage/returns"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <RotateCcw className="w-5 h-5 text-muted-foreground" />
+                  <span>반품 내역</span>
                   <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
                 </Link>
                 

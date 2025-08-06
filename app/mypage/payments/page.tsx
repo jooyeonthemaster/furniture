@@ -23,7 +23,7 @@ import {
 import { PaymentHistory, PaymentStatus, PaymentMethod } from '@/types';
 
 export default function PaymentsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [payments, setPayments] = useState<PaymentHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,12 +34,18 @@ export default function PaymentsPage() {
   const [dateRange, setDateRange] = useState<'all' | '1m' | '3m' | '6m' | '1y'>('all');
 
   useEffect(() => {
+    // 인증 로딩 중이면 대기
+    if (authLoading) {
+      return;
+    }
+
+    // 인증이 완료되었는데 사용자가 없으면 로그인 페이지로 이동
     if (!user) {
       router.push('/register?redirect=/mypage/payments');
       return;
     }
     fetchPayments();
-  }, [user, router]);
+  }, [user, router, authLoading]);
 
   const fetchPayments = async () => {
     try {

@@ -12,7 +12,7 @@ import { Product } from '@/types';
 import { getProduct } from '@/lib/products';
 
 export default function WishlistPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { wishlistItems, removeFromWishlist, loading } = useWishlist();
   const { addItem } = useCart();
   const router = useRouter();
@@ -21,11 +21,17 @@ export default function WishlistPage() {
   const [productsLoading, setProductsLoading] = useState(false);
 
   useEffect(() => {
+    // 인증 로딩 중이면 대기
+    if (authLoading) {
+      return;
+    }
+
+    // 인증이 완료되었는데 사용자가 없으면 로그인 페이지로 이동
     if (!user) {
       router.push('/register?redirect=/mypage/wishlist');
       return;
     }
-  }, [user, router]);
+  }, [user, router, authLoading]);
 
   // 찜 목록의 상품 정보 로드
   useEffect(() => {

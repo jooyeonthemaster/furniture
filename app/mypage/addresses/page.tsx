@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/providers/ClientProviders';
+import { useRouter } from 'next/navigation';
 import { Address } from '@/types';
 import { Plus, MapPin, Phone, Home, Building, MoreHorizontal, Check } from 'lucide-react';
 
 export default function AddressesPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -19,6 +21,21 @@ export default function AddressesPage() {
     label: '집',
     isDefault: false
   });
+
+  useEffect(() => {
+    // 인증 로딩 중이면 대기
+    if (authLoading) {
+      return;
+    }
+
+    // 인증이 완료되었는데 사용자가 없으면 로그인 페이지로 이동
+    if (!user) {
+      router.push('/register?redirect=/mypage/addresses');
+      return;
+    }
+
+    fetchAddresses();
+  }, [user, router, authLoading]);
 
   // 주소 목록 조회
   const fetchAddresses = async () => {

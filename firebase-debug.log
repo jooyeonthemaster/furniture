@@ -1,0 +1,33 @@
+[debug] [2025-08-06T15:44:51.325Z] ----------------------------------------------------------------------
+[debug] [2025-08-06T15:44:51.327Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\jooye\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only firestore:indexes
+[debug] [2025-08-06T15:44:51.327Z] CLI Version:   14.11.2
+[debug] [2025-08-06T15:44:51.328Z] Platform:      win32
+[debug] [2025-08-06T15:44:51.328Z] Node Version:  v20.11.1
+[debug] [2025-08-06T15:44:51.328Z] Time:          Thu Aug 07 2025 00:44:51 GMT+0900 (Korean Standard Time)
+[debug] [2025-08-06T15:44:51.328Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-06T15:44:51.493Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-06T15:44:51.493Z] > authorizing via signed-in user (jooyeon74397430@gmail.com)
+[debug] [2025-08-06T15:44:51.493Z] [iam] checking project furniture-1a26c for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2025-08-06T15:44:51.494Z] Checked if tokens are valid: false, expires at: 1754495013185
+[debug] [2025-08-06T15:44:51.494Z] Checked if tokens are valid: false, expires at: 1754495013185
+[debug] [2025-08-06T15:44:51.495Z] > refreshing access token with scopes: []
+[debug] [2025-08-06T15:44:51.496Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-06T15:44:51.496Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-06T15:44:51.739Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-06T15:44:51.739Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-06T15:44:51.747Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/furniture-1a26c:testIamPermissions [none]
+[debug] [2025-08-06T15:44:51.747Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/furniture-1a26c:testIamPermissions x-goog-quota-user=projects/furniture-1a26c
+[debug] [2025-08-06T15:44:51.747Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/furniture-1a26c:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2025-08-06T15:44:51.995Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/furniture-1a26c:testIamPermissions 200
+[debug] [2025-08-06T15:44:51.995Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/furniture-1a26c:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'furniture-1a26c'...
+[info] 
+[info] i  deploying firestore 
+[info] i  firestore: reading indexes from firestore.indexes.json... 
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2025-08-06T15:44:51.999Z] Checked if tokens are valid: true, expires at: 1754498690739
+[debug] [2025-08-06T15:44:51.999Z] Checked if tokens are valid: true, expires at: 1754498690739
+[debug] [2025-08-06T15:44:51.999Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/furniture-1a26c:test [none]
+[debug] [2025-08-06T15:44:51.999Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/furniture-1a26c:test [omitted]

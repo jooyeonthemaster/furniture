@@ -17,6 +17,10 @@ export async function GET(
   try {
     const { id } = await params;
     const orderId = id;
+    const { searchParams } = new URL(request.url);
+    const customerId = searchParams.get('customerId');
+    
+    console.log('📋 주문 조회 API 호출됨:', { orderId, customerId });
     
     const orderRef = doc(db, 'orders', orderId);
     const orderSnap = await getDoc(orderRef);
@@ -30,6 +34,14 @@ export async function GET(
 
     const orderData = orderSnap.data();
     
+    // customerId가 제공된 경우 권한 검증
+    if (customerId && orderData.customerId !== customerId) {
+      return NextResponse.json(
+        { error: '해당 주문에 대한 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+    
     // Timestamp를 문자열로 변환하여 직렬화 가능하게 만듦
     const order = {
       id: orderSnap.id,
@@ -38,10 +50,11 @@ export async function GET(
       updatedAt: orderData.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
     };
 
+    console.log('✅ 주문 조회 성공:', order.id);
     return NextResponse.json({ order });
 
   } catch (error) {
-    console.error('주문 조회 실패:', error);
+    console.error('❌ 주문 조회 실패:', error);
     return NextResponse.json(
       { error: '주문 조회에 실패했습니다.' },
       { status: 500 }
