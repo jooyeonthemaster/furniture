@@ -14,6 +14,7 @@ interface PurchaseActionsProps {
   isInWishlist: boolean;
   wishlistLoading: boolean;
   cartQuantity: number;
+  availableStock?: number;
 }
 
 export default function PurchaseActions({
@@ -25,9 +26,17 @@ export default function PurchaseActions({
   onToggleWishlist,
   isInWishlist,
   wishlistLoading,
-  cartQuantity
+  cartQuantity,
+  availableStock
 }: PurchaseActionsProps) {
   const router = useRouter();
+
+  const handleDealerInquiry = () => {
+    router.push(`/products/${product.id}/inquiry`);
+  };
+
+  // 사용할 재고 수량 결정 (옵션별 재고가 있으면 그것을, 없으면 전체 재고)
+  const maxStock = availableStock !== undefined ? availableStock : product.stock;
 
   return (
     <div className="space-y-3 pt-6">
@@ -42,12 +51,18 @@ export default function PurchaseActions({
           </button>
           <span className="px-4 py-2 border-x border-border">{quantity}</span>
           <button
-            onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+            onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
             className="px-3 py-2 hover:bg-muted transition-colors"
+            disabled={quantity >= maxStock}
           >
             +
           </button>
         </div>
+        {maxStock <= 5 && (
+          <span className="text-sm text-red-500">
+            재고 부족 (남은 수량: {maxStock}개)
+          </span>
+        )}
       </div>
 
       <div className="flex space-x-3">
@@ -79,14 +94,24 @@ export default function PurchaseActions({
         바로 구매하기
       </button>
 
-      {/* 상품 상담받기 버튼 */}
-      <button 
-        onClick={() => router.push(`/ai-chat?productId=${product.id}`)}
-        className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-      >
-        <MessageCircle className="w-5 h-5" />
-        <span>AI 상품 상담받기</span>
-      </button>
+      {/* 상품 상담받기 버튼들 */}
+      <div className="grid grid-cols-2 gap-3">
+        <button 
+          onClick={() => router.push(`/ai-chat?productId=${product.id}`)}
+          className="bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span>AI 상담</span>
+        </button>
+        
+        <button 
+          onClick={handleDealerInquiry}
+          className="bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span>딜러 문의</span>
+        </button>
+      </div>
     </div>
   );
 }

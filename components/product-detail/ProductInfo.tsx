@@ -7,12 +7,14 @@ interface ProductInfoProps {
   product: Product;
   selectedOptions?: SelectedOptions;
   onOptionsChange?: (options: SelectedOptions) => void;
+  onStockChange?: (stock: number) => void;
 }
 
 export default function ProductInfo({ 
   product, 
   selectedOptions = {}, 
-  onOptionsChange 
+  onOptionsChange,
+  onStockChange
 }: ProductInfoProps) {
   const discountPercentage = Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100);
   
@@ -45,6 +47,35 @@ export default function ProductInfo({
       [optionId]: valueId
     };
     onOptionsChange?.(newOptions);
+    
+    // 재고 정보 업데이트를 위해 새로운 옵션으로 재고 계산
+    setTimeout(() => {
+      const updatedStock = getSelectedOptionsStockForOptions(newOptions);
+      onStockChange?.(updatedStock);
+    }, 0);
+  };
+
+  // 특정 옵션 조합에 대한 재고 계산 (옵션 변경 시 사용)
+  const getSelectedOptionsStockForOptions = (options: SelectedOptions) => {
+    if (!product.hasOptions || !product.options || Object.keys(options).length === 0) {
+      return product.stock;
+    }
+
+    let minStock = Infinity;
+    let hasOptionStock = false;
+
+    product.options.forEach(option => {
+      const selectedValueId = options[option.id];
+      if (selectedValueId) {
+        const selectedValue = option.values.find(v => v.id === selectedValueId);
+        if (selectedValue && selectedValue.stockQuantity !== undefined) {
+          minStock = Math.min(minStock, selectedValue.stockQuantity);
+          hasOptionStock = true;
+        }
+      }
+    });
+
+    return hasOptionStock ? minStock : product.stock;
   };
 
   // 필수 옵션이 모두 선택되었는지 확인
@@ -54,6 +85,30 @@ export default function ProductInfo({
     return product.options
       .filter(option => option.required)
       .every(option => selectedOptions[option.id]);
+  };
+
+  // 선택된 옵션들의 최소 재고 수량 계산
+  const getSelectedOptionsStock = () => {
+    if (!product.hasOptions || !product.options || Object.keys(selectedOptions).length === 0) {
+      return product.stock;
+    }
+
+    let minStock = Infinity;
+    let hasOptionStock = false;
+
+    product.options.forEach(option => {
+      const selectedValueId = selectedOptions[option.id];
+      if (selectedValueId) {
+        const selectedValue = option.values.find(v => v.id === selectedValueId);
+        if (selectedValue && selectedValue.stockQuantity !== undefined) {
+          minStock = Math.min(minStock, selectedValue.stockQuantity);
+          hasOptionStock = true;
+        }
+      }
+    });
+
+    // 옵션별 재고가 설정되어 있으면 그 값을, 아니면 전체 재고를 반환
+    return hasOptionStock ? minStock : product.stock;
   };
 
   return (
@@ -75,7 +130,7 @@ export default function ProductInfo({
           </div>
           <div className="flex items-center space-x-1">
             <Package className="w-4 h-4" />
-            <span>재고 {product.stock}개</span>
+            <span>재고 {getSelectedOptionsStock()}개</span>
           </div>
         </div>
       </div>

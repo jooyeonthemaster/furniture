@@ -102,7 +102,7 @@ export default function AdminSpecifications({ form, handleNestedInputChange }: A
                 onChange={(e) => handleNestedInputChange('specifications', key, e.target.value)}
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
                 placeholder={
-                  key === 'dimensions' ? '예: 68.5 x 65 x 94-104cm' :
+                  key === 'dimensions' ? '예: W 162 x D 208 x H 125 (매트리스 사이즈: W 160 x D 200 x H 28) 또는 100x80x50' :
                   key === 'weight' ? '예: 21kg' :
                   key === 'maxWeight' ? '예: 136kg' :
                   key === 'material' ? '예: 8Z 펠리클 메쉬, 알루미늄' :

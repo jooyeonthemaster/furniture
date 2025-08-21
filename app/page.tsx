@@ -98,7 +98,7 @@ export default function HomePage() {
   const categories = [
     { name: '거실', count: 156, image: '/SEATING.jpg' },
     { name: '침실', count: 89, image: '/hero.jpg' },
-    { name: '주방/식당', count: 124, image: '/STORAGE .jpg' },
+    { name: '주방/식당', count: 124, image: '/STORAGE.jpg' },
     { name: '서재', count: 78, image: '/exhibition.jpg' },
     { name: '조명', count: 203, image: '/LIGHTING.jpg' },
     { name: '액세서리', count: 92, image: '/modelhouse.jpg' },
@@ -116,6 +116,7 @@ export default function HomePage() {
             src={heroSlides[currentSlide].image}
             alt={heroSlides[currentSlide].title}
             fill
+            sizes="100vw"
             className="object-cover"
             priority
           />
@@ -230,6 +231,7 @@ export default function HomePage() {
                       src={category.image}
                       alt={category.name}
                       fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 16vw"
                       className="object-cover group-hover:scale-110 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-300" />
@@ -290,11 +292,10 @@ export default function HomePage() {
                   >
                     <Link href={`/products/${product.id}`}>
                       <div className="relative aspect-[3/4] bg-muted overflow-hidden rounded-lg mb-4 xs:mb-3">
-                        <Image
-                          src={product.images[0] || '/placeholder-image.jpg'}
+                        <img
+                          src={require('@/utils').getPrimaryImageUrl(product)}
                           alt={product.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute top-4 xs:top-3 left-4 xs:left-3">
                           <span className="bg-red-600 text-white px-2 py-1 xs:px-1.5 xs:py-0.5 text-xs font-bold rounded">

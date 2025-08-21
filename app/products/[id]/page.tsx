@@ -32,6 +32,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [relatedQuantities, setRelatedQuantities] = useState<Record<string, number>>({});
   const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({});
+  const [availableStock, setAvailableStock] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -84,6 +85,9 @@ export default function ProductDetailPage() {
         }, {} as any)
       : undefined;
 
+    // 사용할 재고 수량 결정
+    const maxStock = availableStock !== undefined ? availableStock : product.stock;
+
     for (let i = 0; i < qty; i++) {
       if (cartOptions) {
         addItemWithOptions({
@@ -93,7 +97,7 @@ export default function ProductDetailPage() {
           image: product.images[0] || '',
           originalPrice: product.originalPrice,
           salePrice: product.salePrice,
-          maxStock: product.stock,
+          maxStock: maxStock,
         }, cartOptions);
       } else {
         addItem({
@@ -103,7 +107,7 @@ export default function ProductDetailPage() {
           image: product.images[0] || '',
           originalPrice: product.originalPrice,
           salePrice: product.salePrice,
-          maxStock: product.stock,
+          maxStock: maxStock,
         });
       }
     }
@@ -184,6 +188,9 @@ export default function ProductDetailPage() {
     const priceModifier = cartOptions ? Object.values(cartOptions).reduce((sum: number, opt: any) => sum + (opt.priceModifier || 0), 0) : 0;
     const finalPrice = product.salePrice + priceModifier;
 
+    // 사용할 재고 수량 결정
+    const maxStock = availableStock !== undefined ? availableStock : product.stock;
+
     // 세션 스토리지에 바로 구매할 상품 정보 저장
     const directPurchaseData = {
       items: [{
@@ -195,7 +202,7 @@ export default function ProductDetailPage() {
         originalPrice: product.originalPrice,
         salePrice: product.salePrice,
         finalPrice: finalPrice,
-        maxStock: product.stock,
+        maxStock: maxStock,
         quantity,
         selectedOptions: cartOptions,
       }],
@@ -259,6 +266,7 @@ export default function ProductDetailPage() {
               product={product} 
               selectedOptions={selectedOptions}
               onOptionsChange={setSelectedOptions}
+              onStockChange={setAvailableStock}
             />
             
             <PurchaseActions
@@ -271,6 +279,7 @@ export default function ProductDetailPage() {
               isInWishlist={product && isInWishlist(product.id)}
               wishlistLoading={wishlistLoading}
               cartQuantity={getItemQuantity(product?.id || '')}
+              availableStock={availableStock}
             />
           </div>
 

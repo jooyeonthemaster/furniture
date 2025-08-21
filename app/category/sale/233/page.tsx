@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { getPrimaryImageUrl } from '@/utils';
 import Link from 'next/link';
 import { Percent } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
@@ -94,7 +95,7 @@ export default function SalePage() {
                   <Link href={`/products/${product.id}`}>
                     <div className="aspect-[4/5] mb-3 relative overflow-hidden rounded-lg bg-gray-50">
                       <Image
-                        src={product.images[0] || '/placeholder-product.jpg'}
+                        src={getPrimaryImageUrl(product as any)}
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"

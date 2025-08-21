@@ -18,6 +18,8 @@ const navigationItems = [
   { name: '주문 관리', href: '/admin/orders', icon: ShoppingCart },
   { name: '반품 관리', href: '/admin/returns', icon: RotateCcw },
   { name: '사용자 관리', href: '/admin/users', icon: Users },
+  { name: '딜러 관리', href: '/admin/dealers', icon: Users },
+  { name: '채팅 관리', href: '/admin/chats', icon: Bell },
   { name: '통계', href: '/admin/analytics', icon: BarChart3 },
   { name: '설정', href: '/admin/settings', icon: Settings },
 ];

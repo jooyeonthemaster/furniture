@@ -60,5 +60,37 @@ service cloud.firestore {
     //      request.auth.token.role == 'admin');
     //   allow write: if request.auth != null && request.auth.uid == userId;
     // }
+    
+    // 🚨 개발용 임시 규칙 - 채팅 세션 관리 (보안 위험!)
+    match /chatSessions/{sessionId} {
+      allow read, write: if true; // 개발 단계에서 모든 접근 허용
+      
+      // 채팅 메시지 하위 컬렉션
+      match /messages/{messageId} {
+        allow read, write: if true; // 개발 단계에서 모든 접근 허용
+      }
+    }
+    
+    // 🛡️ 프로덕션용 권장 규칙 (향후 적용):
+    // match /chatSessions/{sessionId} {
+    //   allow read, write: if request.auth != null && (
+    //     resource.data.customerId == request.auth.uid ||
+    //     resource.data.dealerId == request.auth.uid ||
+    //     request.auth.token.role == 'admin'
+    //   );
+    //   allow create: if request.auth != null && 
+    //     request.resource.data.customerId == request.auth.uid;
+    //   
+    //   // 채팅 메시지 하위 컬렉션
+    //   match /messages/{messageId} {
+    //     allow read, write: if request.auth != null && (
+    //       get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.customerId == request.auth.uid ||
+    //       get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.dealerId == request.auth.uid ||
+    //       request.auth.token.role == 'admin'
+    //     );
+    //     allow create: if request.auth != null && 
+    //       request.resource.data.senderId == request.auth.uid;
+    //   }
+    // }
   }
 } 

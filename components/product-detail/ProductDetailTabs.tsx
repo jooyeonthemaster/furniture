@@ -166,7 +166,14 @@ export default function ProductDetailTabs({ product, selectedTab, setSelectedTab
               {/* 제품 사양 */}
               <div className="space-y-3">
                 <h4 className="font-medium text-lg mb-3">제품 사양</h4>
-                {product.dimensions && (product.dimensions.width > 0 || product.dimensions.height > 0 || product.dimensions.depth > 0) && (
+                
+                {/* 치수 정보 - specifications.dimensions를 우선 표시 (자유 입력 형식) */}
+                {product.specifications?.dimensions ? (
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="font-medium">치수</span>
+                    <span className="text-muted-foreground">{product.specifications.dimensions}</span>
+                  </div>
+                ) : product.dimensions && (product.dimensions.width > 0 || product.dimensions.height > 0 || product.dimensions.depth > 0) && (
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="font-medium">치수</span>
                     <span className="text-muted-foreground">
@@ -174,36 +181,58 @@ export default function ProductDetailTabs({ product, selectedTab, setSelectedTab
                     </span>
                   </div>
                 )}
+                
+                {/* 무게 정보 */}
                 {product.specifications?.weight && (
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="font-medium">무게</span>
                     <span className="text-muted-foreground">{product.specifications.weight}</span>
                   </div>
                 )}
+                
+                {/* 최대 하중 */}
                 {product.specifications?.maxWeight && (
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="font-medium">최대 하중</span>
                     <span className="text-muted-foreground">{product.specifications.maxWeight}</span>
                   </div>
                 )}
-                {product.materials && product.materials.length > 0 && (
+                
+                {/* 소재 정보 */}
+                {product.materials && product.materials.length > 0 ? (
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="font-medium">소재</span>
                     <span className="text-muted-foreground">{product.materials.join(', ')}</span>
                   </div>
+                ) : product.specifications?.material && (
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="font-medium">소재</span>
+                    <span className="text-muted-foreground">{product.specifications.material}</span>
+                  </div>
                 )}
-                {product.colors && product.colors.length > 0 && (
+                
+                {/* 색상 정보 */}
+                {product.colors && product.colors.length > 0 ? (
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="font-medium">색상</span>
                     <span className="text-muted-foreground">{product.colors.join(', ')}</span>
                   </div>
+                ) : product.specifications?.color && (
+                  <div className="flex justify-between py-2 border-b border-border">
+                    <span className="font-medium">색상</span>
+                    <span className="text-muted-foreground">{product.specifications.color}</span>
+                  </div>
                 )}
+                
+                {/* 원산지 정보 */}
                 {product.specifications?.origin && (
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="font-medium">원산지</span>
                     <span className="text-muted-foreground">{product.specifications.origin}</span>
                   </div>
                 )}
+                
+                {/* 제조년도 */}
                 {product.specifications?.year && (
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="font-medium">제조년도</span>

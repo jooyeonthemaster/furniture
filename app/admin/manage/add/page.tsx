@@ -69,21 +69,9 @@ export default function AddProductPage() {
     const files = e.target.files;
     if (!files) return;
 
-    // 실제로는 Cloudinary에 업로드
-    // 지금은 로컬 파일 URL 사용
-    const newImages = Array.from(files).map(file => ({
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      url: URL.createObjectURL(file),
-      file,
-      isPrimary: form.images.length === 0,
-      alt: file.name.replace(/\.[^/.]+$/, ''),
-      caption: ''
-    }));
-    
-    setForm(prev => ({
-      ...prev,
-      images: [...prev.images, ...newImages]
-    }));
+    // ImageUploader 컴포넌트를 사용하도록 변경 필요
+    // 이 함수는 더 이상 사용하지 않음 - AdminImages 컴포넌트에서 처리
+    console.warn('handleImageUpload는 더 이상 사용되지 않습니다. AdminImages 컴포넌트를 사용하세요.');
   };
 
   // 폼 검증 함수
@@ -132,14 +120,30 @@ export default function AddProductPage() {
         discount: Math.round(((form.originalPrice - form.salePrice) / form.originalPrice) * 100),
         condition: form.condition as any,
         availability: form.availability as any,
-        images: form.images.map(img => img.url),
-        // 치수 정보 파싱
-        dimensions: form.specifications.dimensions ? {
-          width: parseInt(form.specifications.dimensions.split('x')[0]?.trim()) || 0,
-          height: parseInt(form.specifications.dimensions.split('x')[1]?.trim()) || 0,
-          depth: parseInt(form.specifications.dimensions.split('x')[2]?.trim()) || 0,
-          unit: 'cm' as const
-        } : undefined,
+        images: form.images
+          .map(img => img.url)
+          .filter(url => !url.startsWith('blob:')), // blob URL 제거
+        // 치수 정보 - 자유 입력 형식 지원
+        dimensions: form.specifications.dimensions ? (() => {
+          // 숫자x숫자x숫자 형식인 경우에만 파싱, 아니면 undefined로 설정
+          const dimensionParts = form.specifications.dimensions.split('x');
+          if (dimensionParts.length === 3) {
+            const width = parseInt(dimensionParts[0]?.trim()) || 0;
+            const height = parseInt(dimensionParts[1]?.trim()) || 0;
+            const depth = parseInt(dimensionParts[2]?.trim()) || 0;
+            
+            // 모든 값이 유효한 숫자인 경우에만 dimensions 객체 생성
+            if (width > 0 || height > 0 || depth > 0) {
+              return {
+                width,
+                height,
+                depth,
+                unit: 'cm' as const
+              };
+            }
+          }
+          return undefined;
+        })() : undefined,
         materials: form.specifications.material ? [form.specifications.material] : [],
         colors: form.specifications.color ? [form.specifications.color] : [],
         stock: form.stockCount,
@@ -164,8 +168,11 @@ export default function AddProductPage() {
           ? form.usageGuide : undefined,
         // 제품 사양
         specifications: {
+          dimensions: form.specifications.dimensions || '',
           weight: form.specifications.weight || '',
           maxWeight: form.specifications.maxWeight || '',
+          material: form.specifications.material || '',
+          color: form.specifications.color || '',
           origin: form.specifications.origin || '',
           year: form.specifications.year || ''
         },

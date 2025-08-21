@@ -54,8 +54,6 @@ export default function ImageUploader({
         throw new Error('Cloudinary Cloud Name이 설정되지 않았습니다.');
       }
 
-      const timestamp = Math.round(new Date().getTime() / 1000);
-      
       // FormData 생성 (Unsigned 업로드)
       const formData = new FormData();
       formData.append('file', file);

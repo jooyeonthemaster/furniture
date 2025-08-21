@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { getPrimaryImageUrl } from '@/utils';
 import Link from 'next/link';
 import { Baby } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';

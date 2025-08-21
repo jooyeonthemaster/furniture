@@ -20,9 +20,14 @@ import {
   ArrowRight,
   Home,
   MapPin,
-  RotateCcw
+  RotateCcw,
+  MessageCircle,
+  Bell
 } from 'lucide-react';
-import { Order, CustomerDashboard } from '@/types';
+import { Order, CustomerDashboard, ChatSession } from '@/types';
+import { getCustomerChatSessions } from '@/lib/chat';
+import NotificationSettings from '@/components/notifications/NotificationSettings';
+import { useChatNotifications } from '@/hooks/useChatNotifications';
 
 export default function MyPage() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -32,6 +37,11 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<CustomerDashboard | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [unreadChats, setUnreadChats] = useState(0);
+  
+  // 실시간 채팅 알림
+  const { unreadCount: realtimeUnreadCount } = useChatNotifications();
 
   useEffect(() => {
     // 인증 로딩 중이면 대기
@@ -78,6 +88,19 @@ export default function MyPage() {
               .slice(0, 3)
           });
         }
+
+        // 채팅 내역 조회
+        const sessions = await getCustomerChatSessions(user.id);
+        setChatSessions(sessions);
+        
+        // 읽지 않은 채팅 계산 (딜러가 마지막으로 메시지를 보낸 채팅)
+        const unreadCount = sessions.filter(session => {
+          const lastMessage = session.messages[session.messages.length - 1];
+          return lastMessage && 
+                 lastMessage.senderType === 'dealer' && 
+                 session.status === 'active';
+        }).length;
+        setUnreadChats(unreadCount);
       } catch (error) {
         console.error('대시보드 데이터 로드 실패:', error);
       } finally {
@@ -164,7 +187,7 @@ export default function MyPage() {
           {/* 메인 컨텐츠 */}
           <div className="lg:col-span-2 space-y-8">
             {/* 요약 카드들 */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="bg-white border rounded-lg p-6 text-center">
                 <Package className="w-8 h-8 mx-auto mb-2 text-blue-600" />
                 <div className="text-2xl font-bold">{dashboard?.totalOrders || 0}</div>
@@ -189,6 +212,17 @@ export default function MyPage() {
                   {dashboard ? `${(dashboard.totalSpent / 10000).toFixed(0)}만원` : '0원'}
                 </div>
                 <div className="text-sm text-muted-foreground">총 구매액</div>
+              </div>
+              
+              <div className="bg-white border rounded-lg p-6 text-center relative">
+                <MessageCircle className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                <div className="text-2xl font-bold">{chatSessions.length}</div>
+                <div className="text-sm text-muted-foreground">채팅 상담</div>
+                {(unreadChats > 0 || realtimeUnreadCount > 0) && (
+                  <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                    {Math.max(unreadChats, realtimeUnreadCount)}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -294,6 +328,83 @@ export default function MyPage() {
                 )}
               </div>
             </div>
+
+            {/* 최근 채팅 내역 */}
+            <div className="bg-white border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-medium">최근 채팅 상담</h2>
+                <Link 
+                  href="/mypage/chats" 
+                  className="text-sm text-primary hover:underline flex items-center space-x-1"
+                >
+                  <span>전체보기</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              
+              {chatSessions.length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">아직 채팅 상담 내역이 없습니다.</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    상품 페이지에서 딜러에게 문의해보세요!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {chatSessions.slice(0, 3).map((session) => {
+                    const lastMessage = session.messages[session.messages.length - 1];
+                    const isUnread = lastMessage && 
+                                   lastMessage.senderType === 'dealer' && 
+                                   session.status === 'active';
+                    
+                    return (
+                      <div 
+                        key={session.id}
+                        onClick={() => router.push(`/chat/${session.id}`)}
+                        className={`p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer ${
+                          isUnread ? 'bg-blue-50 border-blue-200' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              session.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
+                              session.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                              session.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {session.status === 'waiting' ? '대기중' :
+                               session.status === 'active' ? '진행중' :
+                               session.status === 'completed' ? '완료' : '취소'}
+                            </span>
+                            {isUnread && (
+                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(session.createdAt).toLocaleDateString('ko-KR')}
+                          </span>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground mb-2">
+                          상품 ID: {session.productId.slice(0, 8)}...
+                        </p>
+                        
+                        {lastMessage && (
+                          <p className="text-sm line-clamp-2">
+                            <span className="font-medium">
+                              {lastMessage.senderType === 'customer' ? '나' : '딜러'}:
+                            </span>{' '}
+                            {lastMessage.content}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 사이드바 */}
@@ -343,6 +454,20 @@ export default function MyPage() {
                 </Link>
                 
                 <Link
+                  href="/mypage/chats"
+                  className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors relative"
+                >
+                  <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                  <span>채팅 상담</span>
+                  {(unreadChats > 0 || realtimeUnreadCount > 0) && (
+                    <div className="absolute top-2 left-8 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                      {Math.max(unreadChats, realtimeUnreadCount)}
+                    </div>
+                  )}
+                  <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </Link>
+                
+                <Link
                   href="/mypage/shipping"
                   className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors"
                 >
@@ -387,6 +512,12 @@ export default function MyPage() {
                   <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground" />
                 </Link>
               </div>
+            </div>
+
+            {/* 알림 설정 */}
+            <div className="bg-white border rounded-lg p-6">
+              <h3 className="font-medium mb-4">알림 설정</h3>
+              <NotificationSettings />
             </div>
 
             {/* 고객센터 */}

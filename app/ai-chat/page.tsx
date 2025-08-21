@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Send, Bot, User, MessageCircle, Clock, Star, Package, Tag } from 'lucide-react';
 import Image from 'next/image';
+import { getPrimaryImageUrl } from '@/utils';
 import PageLayout from '@/components/layout/PageLayout';
 import { getProductById } from '@/lib/products';
 import { Product } from '@/types';

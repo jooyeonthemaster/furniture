@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingBag, User, Heart, Menu, X, MoreHorizontal } from 'lucide-react';
+import Image from 'next/image';
+import { Search, ShoppingBag, User, Heart, Menu, X, MoreHorizontal, Bell } from 'lucide-react';
 import { useAuth } from '@/components/providers/ClientProviders';
 import { useCart } from '@/hooks/useCart';
+import { useChatNotifications } from '@/hooks/useChatNotifications';
 
 export default function Header() {
   const { user, signOut } = useAuth();
   const { totalItems } = useCart();
+  const { unreadCount } = useChatNotifications();
   const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
@@ -50,6 +53,21 @@ export default function Header() {
     setShowMoreMenu(false);
   };
 
+  // 모바일에서 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMoreMenu) {
+        const target = event.target as Element;
+        if (!target.closest('.mobile-more-menu')) {
+          setShowMoreMenu(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreMenu]);
+
   return (
     <>
       <header 
@@ -67,14 +85,26 @@ export default function Header() {
               {/* 왼쪽 메뉴들 */}
               <nav className="flex items-center">
 
-                {/* 네비게이션 홈 로고 - 크기 대폭 축소 */}
+                {/* 네비게이션 홈 로고 */}
                 <Link href="/" className="mr-4 xl:mr-8 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="120" height="28" viewBox="0 0 120 28" className="xl:hidden">
-                    <text x="5" y="22" fontSize="24" fontFamily="serif" fill="black">SERQU</text>
-                  </svg>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="160" height="32" viewBox="0 0 160 32" className="hidden xl:block">
-                    <text x="8" y="26" fontSize="28" fontFamily="serif" fill="black">SERQU</text>
-                  </svg>
+                  <Image
+                    src="/logo.jpg"
+                    alt="SERQU Logo"
+                    width={120}
+                    height={28}
+                    className="xl:hidden object-contain"
+                    style={{ width: 'auto', height: '28px' }}
+                    priority
+                  />
+                  <Image
+                    src="/logo.jpg"
+                    alt="SERQU Logo"
+                    width={160}
+                    height={32}
+                    className="hidden xl:block object-contain"
+                    style={{ width: 'auto', height: '32px' }}
+                    priority
+                  />
                 </Link>
 
                 {/* 주요 메뉴들 - 항상 표시 */}
@@ -425,14 +455,24 @@ export default function Header() {
                 )}
 
                 {user && (
-                  <Link href="/cart" className="relative p-2 xl:p-3 text-gray-600 hover:text-black">
-                    <ShoppingBag size={24} className="xl:w-7 xl:h-7" />
-                    {totalItems > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-5 h-5 xl:w-6 xl:h-6 flex items-center justify-center">
-                        {totalItems}
-                      </span>
-                    )}
-                  </Link>
+                  <>
+                    <Link href="/mypage/chats" className="relative p-2 xl:p-3 text-gray-600 hover:text-black">
+                      <Bell size={24} className="xl:w-7 xl:h-7" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 xl:w-6 xl:h-6 flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link href="/cart" className="relative p-2 xl:p-3 text-gray-600 hover:text-black">
+                      <ShoppingBag size={24} className="xl:w-7 xl:h-7" />
+                      {totalItems > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-5 h-5 xl:w-6 xl:h-6 flex items-center justify-center">
+                          {totalItems}
+                        </span>
+                      )}
+                    </Link>
+                  </>
                 )}
               </div>
 
@@ -448,45 +488,132 @@ export default function Header() {
               {/* 왼쪽 - 햄버거 메뉴 */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-3 text-gray-600 hover:text-black"
+                className="p-2 text-gray-600 hover:text-black flex-shrink-0"
               >
-                <Menu size={30} />
+                <Menu size={24} />
               </button>
 
               {/* 중앙 - 로고 */}
-              <Link href="/" className="flex-1 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="180" height="40" viewBox="0 0 180 40">
-                  <text x="10" y="30" fontSize="36" fontFamily="serif" fill="black">SERQU</text>
-                </svg>
+              <Link href="/" className="flex-1 flex justify-center">
+                <Image
+                  src="/logo.jpg"
+                  alt="SERQU Logo"
+                  width={100}
+                  height={24}
+                  className="object-contain"
+                  style={{ width: 'auto', height: '24px' }}
+                  priority
+                />
               </Link>
 
-              {/* 오른쪽 - 아이콘들 */}
-              <div className="flex items-center space-x-2">
+              {/* 오른쪽 - 더보기 메뉴 */}
+              <div className="relative flex-shrink-0 mobile-more-menu">
                 <button
-                  onClick={() => setSearchOpen(true)}
-                  className="p-3 text-gray-600 hover:text-black"
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  className="p-2 text-gray-600 hover:text-black"
                 >
-                  <Search size={30} />
+                  <MoreHorizontal size={24} />
                 </button>
 
-                {user ? (
+                {/* 드롭다운 메뉴 */}
+                {showMoreMenu && (
                   <>
-                    <Link href="/mypage" className="p-3 text-gray-600 hover:text-black">
-                      <User size={30} />
-                    </Link>
-                    <Link href="/cart" className="relative p-3 text-gray-600 hover:text-black">
-                      <ShoppingBag size={30} />
-                      {totalItems > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-                          {totalItems}
-                        </span>
-                      )}
-                    </Link>
+                    <div 
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowMoreMenu(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white border shadow-lg rounded-lg z-50 mobile-more-menu">
+                      <div className="py-2">
+                        <button
+                          onClick={() => {
+                            setSearchOpen(true);
+                            setShowMoreMenu(false);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm hover:bg-gray-50"
+                        >
+                          <Search size={18} className="mr-3" />
+                          검색
+                        </button>
+                        
+                        {user && (
+                          <Link 
+                            href="/mypage/wishlist" 
+                            className="flex items-center px-4 py-3 text-sm hover:bg-gray-50"
+                            onClick={() => setShowMoreMenu(false)}
+                          >
+                            <Heart size={18} className="mr-3" />
+                            위시리스트
+                          </Link>
+                        )}
+
+                        {user ? (
+                          <>
+                            <Link 
+                              href="/mypage" 
+                              className="flex items-center px-4 py-3 text-sm hover:bg-gray-50"
+                              onClick={() => setShowMoreMenu(false)}
+                            >
+                              <User size={18} className="mr-3" />
+                              마이페이지
+                            </Link>
+                            
+                            <Link 
+                              href="/mypage/chats" 
+                              className="flex items-center px-4 py-3 text-sm hover:bg-gray-50"
+                              onClick={() => setShowMoreMenu(false)}
+                            >
+                              <Bell size={18} className="mr-3" />
+                              알림
+                              {unreadCount > 0 && (
+                                <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                  {unreadCount}
+                                </span>
+                              )}
+                            </Link>
+                            
+                            <Link 
+                              href="/cart" 
+                              className="flex items-center px-4 py-3 text-sm hover:bg-gray-50"
+                              onClick={() => setShowMoreMenu(false)}
+                            >
+                              <ShoppingBag size={18} className="mr-3" />
+                              장바구니
+                              {totalItems > 0 && (
+                                <span className="ml-auto bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                  {totalItems}
+                                </span>
+                              )}
+                            </Link>
+                            
+                            <div className="border-t my-1"></div>
+                            
+                            <div className="px-4 py-3 border-b bg-gray-50">
+                              <p className="text-xs text-gray-600 break-all">{user.email}</p>
+                            </div>
+                            
+                            <button
+                              onClick={() => {
+                                signOut();
+                                setShowMoreMenu(false);
+                              }}
+                              className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 text-red-600"
+                            >
+                              로그아웃
+                            </button>
+                          </>
+                        ) : (
+                          <Link 
+                            href="/register" 
+                            className="flex items-center px-4 py-3 text-sm hover:bg-gray-50"
+                            onClick={() => setShowMoreMenu(false)}
+                          >
+                            <User size={18} className="mr-3" />
+                            로그인/회원가입
+                          </Link>
+                        )}
+                      </div>
+                    </div>
                   </>
-                ) : (
-                  <Link href="/register" className="p-3 text-gray-600 hover:text-black">
-                    <User size={30} />
-                  </Link>
                 )}
               </div>
 

@@ -197,25 +197,38 @@ export function useEditProduct(productId: string) {
         stock: form.stockCount,
         availability: form.availability,
         
-        // 이미지
-        images: form.images.length > 0 ? form.images.map(img => typeof img === 'string' ? img : img.url) : ['/placeholder-product.jpg'],
+        // 이미지 (blob URL 필터링)
+        images: form.images.length > 0 ? 
+          form.images
+            .map(img => typeof img === 'string' ? img : img.url)
+            .filter(url => !url.startsWith('blob:')) // blob URL 제거
+          : ['/placeholder-product.jpg'],
         
         // 상품 옵션
         hasOptions: form.hasOptions,
         options: form.hasOptions ? form.options : [],
         
-        // 치수 정보
-        dimensions: form.specifications.dimensions ? {
-          width: parseInt(form.specifications.dimensions.split('x')[0]) || 0,
-          height: parseInt(form.specifications.dimensions.split('x')[1]) || 0,
-          depth: parseInt(form.specifications.dimensions.split('x')[2]) || 0,
-          unit: 'cm' as const
-        } : {
-          width: 0,
-          height: 0,
-          depth: 0,
-          unit: 'cm' as const
-        },
+        // 치수 정보 - 자유 입력 형식 지원
+        dimensions: form.specifications.dimensions ? (() => {
+          // 숫자x숫자x숫자 형식인 경우에만 파싱, 아니면 undefined로 설정
+          const dimensionParts = form.specifications.dimensions.split('x');
+          if (dimensionParts.length === 3) {
+            const width = parseInt(dimensionParts[0]?.trim()) || 0;
+            const height = parseInt(dimensionParts[1]?.trim()) || 0;
+            const depth = parseInt(dimensionParts[2]?.trim()) || 0;
+            
+            // 모든 값이 유효한 숫자인 경우에만 dimensions 객체 생성
+            if (width > 0 || height > 0 || depth > 0) {
+              return {
+                width,
+                height,
+                depth,
+                unit: 'cm' as const
+              };
+            }
+          }
+          return undefined;
+        })() : undefined,
         
         // 소재 및 색상
         materials: form.specifications.material ? [form.specifications.material] : [],
@@ -232,8 +245,11 @@ export function useEditProduct(productId: string) {
         
         // 제품 사양 (전체)
         specifications: {
+          dimensions: form.specifications.dimensions || '',
           weight: form.specifications.weight || '',
           maxWeight: form.specifications.maxWeight || '',
+          material: form.specifications.material || '',
+          color: form.specifications.color || '',
           origin: form.specifications.origin || '',
           year: form.specifications.year || ''
         },

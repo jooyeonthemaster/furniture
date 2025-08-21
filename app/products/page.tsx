@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { getPrimaryImageUrl } from '@/utils';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
@@ -223,7 +224,7 @@ export default function ProductsPage() {
                   {/* 상품 이미지 */}
                   <div className={viewMode === 'grid' ? 'relative aspect-square' : 'relative w-48 h-48 flex-shrink-0'}>
                     <Image
-                      src={product.images[0] || '/placeholder-image.jpg'}
+                      src={getPrimaryImageUrl(product as any)}
                       alt={product.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
