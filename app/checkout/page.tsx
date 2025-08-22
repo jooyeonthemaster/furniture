@@ -22,7 +22,7 @@ const clientKey = process.env.NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY;
 function CheckoutPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { items: cartItems, totalAmount: cartTotalAmount, clearCart } = useCart();
   
   // 바로 구매 여부 확인
@@ -131,6 +131,12 @@ function CheckoutPageContent() {
   };
 
   useEffect(() => {
+    // 인증 상태가 로딩 중이면 기다림
+    if (authLoading) {
+      return;
+    }
+    
+    // 인증 상태 로딩이 완료되었는데 사용자가 없으면 로그인 페이지로 리다이렉트
     if (!user) {
       router.push('/register?redirect=/checkout' + (isDirect ? '?direct=true' : ''));
       return;
@@ -173,6 +179,78 @@ function CheckoutPageContent() {
         paymentMethodsWidgetRef.current = paymentMethodsWidget;
         
         setPaymentReady(true);
+
+        // 위젯 렌더링이 완전히 완료된 후에 테스트 메시지 제거
+        setTimeout(() => {
+          const devToolsStyleRemove = () => {
+            // 개발자 도구에서 하는 것처럼 안전한 선택자로 제거
+            try {
+              const alertElements = document.querySelectorAll('div[role="alert"]');
+              alertElements.forEach(el => {
+                if (el.textContent?.includes('테스트 환경') || el.textContent?.includes('실제로 결제되지 않습니다')) {
+                  console.log('타겟 요소 발견, 제거 시도:', el);
+                  el.remove();
+                }
+              });
+            } catch(e) {
+              console.error('타겟 요소 제거 실패:', e);
+            }
+
+            // 백업: 다른 방법들
+            document.querySelectorAll('*[role="alert"]').forEach(el => {
+              if (el.textContent?.includes('테스트 환경') || el.textContent?.includes('실제로 결제되지 않습니다')) {
+                console.log('텍스트 기반 제거:', el);
+                el.remove();
+              }
+            });
+            
+            try {
+              const radixElements = document.querySelectorAll('div[id^="radix-"], span[id^="radix-"]');
+              radixElements.forEach(el => {
+                if (el.textContent?.includes('테스트 환경') || el.textContent?.includes('실제로 결제되지 않습니다')) {
+                  console.log('radix ID 기반 제거:', el);
+                  el.remove();
+                }
+              });
+            } catch(e) {
+              console.error('radix 요소 제거 실패:', e);
+            }
+            
+            try {
+              const cacheElements = document.querySelectorAll('.payment-widget-cache-1db4li2, .payment-widget-cache-1w0clqj, .payment-widget-cache-1o8j7f2, .payment-widget-cache-z32lwb, .payment-widget-cache-1smfk4g, .payment-widget-cache-1e4e9cy, .payment-widget-cache-amrvyn');
+              cacheElements.forEach(el => {
+                if (el.textContent?.includes('테스트 환경') || el.textContent?.includes('실제로 결제되지 않습니다')) {
+                  console.log('클래스 기반 제거:', el);
+                  el.remove();
+                }
+              });
+            } catch(e) {
+              console.error('클래스 요소 제거 실패:', e);
+            }
+
+            // 최후의 수단: 전체 DOM 스캔
+            document.querySelectorAll('*').forEach(el => {
+              const text = el.textContent || '';
+              if (text === '테스트 환경 - 실제로 결제되지 않습니다.' || 
+                  (text.includes('테스트 환경') && text.includes('실제로 결제되지 않습니다'))) {
+                console.log('전체 스캔으로 제거:', el);
+                el.remove();
+              }
+            });
+          };
+
+          // 여러 번 시도
+          devToolsStyleRemove();
+          setTimeout(devToolsStyleRemove, 50);
+          setTimeout(devToolsStyleRemove, 100);
+          setTimeout(devToolsStyleRemove, 200);
+          setTimeout(devToolsStyleRemove, 500);
+          setTimeout(devToolsStyleRemove, 1000);
+          
+          // 지속적 모니터링
+          const persistentInterval = setInterval(devToolsStyleRemove, 100);
+          setTimeout(() => clearInterval(persistentInterval), 5000);
+        }, 500); // 위젯 렌더링 완료 후 충분한 시간 대기
       } catch (error) {
         console.error('결제 위젯 초기화 실패:', error);
       } finally {
@@ -184,7 +262,7 @@ function CheckoutPageContent() {
     if (directItemsLoaded) {
       initializePaymentWidget();
     }
-  }, [user, items.length, finalAmount, router, directItemsLoaded]);
+  }, [user, items.length, finalAmount, router, directItemsLoaded, authLoading]);
 
   // 결제 금액 업데이트
   useEffect(() => {
@@ -193,6 +271,265 @@ function CheckoutPageContent() {
       paymentMethodsWidget.updateAmount(finalAmount);
     }
   }, [finalAmount]);
+
+  // 토스페이먼츠 테스트 환경 메시지 완전 박멸 시스템 (위젯 로드 후에만 실행)
+  useEffect(() => {
+    // 결제 위젯이 준비되지 않았으면 실행하지 않음
+    if (!paymentReady) {
+      return;
+    }
+    // 최종 핵무기: 브루트포스 방식
+    const bruteForceRemove = () => {
+      try {
+        // 1. 안전한 선택자로 직접 타겟팅
+        const safeSelectors = [
+          'div[role="alert"]',
+          '.payment-widget-cache-1db4li2',
+          '.payment-widget-cache-1w0clqj',
+          '.payment-widget-cache-1o8j7f2',
+          '.payment-widget-cache-z32lwb',
+          '.payment-widget-cache-1smfk4g',
+          '.payment-widget-cache-1e4e9cy',
+          '.payment-widget-cache-amrvyn'
+        ];
+
+        safeSelectors.forEach(selector => {
+          try {
+            document.querySelectorAll(selector).forEach(el => {
+              // 테스트 환경 메시지가 포함된 요소만 제거
+              if (el.textContent?.includes('테스트 환경') || 
+                  el.textContent?.includes('실제로 결제되지 않습니다') ||
+                  el.querySelector && el.querySelector('*[id*="radix"]')) {
+                el.style.setProperty('display', 'none', 'important');
+                el.style.setProperty('visibility', 'hidden', 'important');
+                el.style.setProperty('opacity', '0', 'important');
+                el.style.setProperty('height', '0', 'important');
+                el.style.setProperty('width', '0', 'important');
+                el.style.setProperty('position', 'absolute', 'important');
+                el.style.setProperty('top', '-99999px', 'important');
+                el.style.setProperty('left', '-99999px', 'important');
+                el.style.setProperty('z-index', '-99999', 'important');
+                el.style.setProperty('pointer-events', 'none', 'important');
+                el.remove();
+              }
+            });
+          } catch(e) {
+            console.error('선택자 오류:', selector, e);
+          }
+        });
+
+        // 2. 간단하고 안전한 전체 DOM 스캔
+        try {
+          const allElements = document.querySelectorAll('*');
+          allElements.forEach(el => {
+            try {
+              const text = el.textContent || '';
+              const hasTestText = text.includes('테스트 환경') || text.includes('실제로 결제되지 않습니다');
+              const hasAlertRole = el.getAttribute && el.getAttribute('role') === 'alert';
+              const hasRadixId = el.id && typeof el.id === 'string' && el.id.includes('radix');
+              const hasPaymentCache = el.className && typeof el.className === 'string' && el.className.includes('payment-widget-cache');
+              
+              if (hasTestText || hasAlertRole || hasRadixId || hasPaymentCache) {
+                el.style.setProperty('display', 'none', 'important');
+                el.style.setProperty('visibility', 'hidden', 'important');
+                el.style.setProperty('opacity', '0', 'important');
+                el.style.setProperty('height', '0', 'important');
+                el.style.setProperty('width', '0', 'important');
+                el.style.setProperty('position', 'absolute', 'important');
+                el.style.setProperty('top', '-99999px', 'important');
+                el.style.setProperty('left', '-99999px', 'important');
+                el.style.setProperty('z-index', '-99999', 'important');
+                el.style.setProperty('pointer-events', 'none', 'important');
+                el.remove();
+              }
+            } catch(e) {
+              // 개별 요소 처리 실패는 무시
+            }
+          });
+        } catch(e) {
+          console.error('전체 DOM 스캔 실패:', e);
+        }
+
+      } catch(e) {
+        console.error('브루트포스 제거 실패:', e);
+      }
+    };
+
+    // 즉시 실행
+    bruteForceRemove();
+    
+    // 여러 시점에서 실행
+    setTimeout(bruteForceRemove, 1);
+    setTimeout(bruteForceRemove, 10);
+    setTimeout(bruteForceRemove, 50);
+    setTimeout(bruteForceRemove, 100);
+    setTimeout(bruteForceRemove, 200);
+    setTimeout(bruteForceRemove, 500);
+    setTimeout(bruteForceRemove, 1000);
+
+    // 안전한 간격으로 실행 (토스페이먼츠 위젯과 충돌 방지)
+    const safeInterval = setInterval(bruteForceRemove, 500);
+
+    // 안전한 DOM 변경 감지
+    const safeObserver = new MutationObserver(() => {
+      setTimeout(bruteForceRemove, 100); // 약간의 딜레이로 충돌 방지
+    });
+
+    safeObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    setTimeout(() => {
+      clearInterval(safeInterval);
+      safeObserver.disconnect();
+    }, 10000); // 10초 후 정리
+
+  }, [paymentReady]);
+
+  // 추가: 기존 박멸 시스템 (위젯 준비 후에만 실행)
+  useEffect(() => {
+    // 결제 위젯이 준비되지 않았으면 실행하지 않음
+    if (!paymentReady) {
+      return;
+    }
+    // 최종 병기: 모든 방법으로 제거
+    const nuclearRemoveTestMessages = () => {
+      // 1. 모든 role="alert" 요소 제거
+      document.querySelectorAll('*[role="alert"]').forEach(el => {
+        try {
+          el.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;position:absolute!important;top:-99999px!important;left:-99999px!important;z-index:-99999!important;pointer-events:none!important;';
+          el.remove();
+        } catch(e) {}
+      });
+
+      // 2. 모든 radix ID 요소 제거  
+      document.querySelectorAll('*[id*="radix"]').forEach(el => {
+        try {
+          el.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;position:absolute!important;top:-99999px!important;left:-99999px!important;z-index:-99999!important;pointer-events:none!important;';
+          el.remove();
+        } catch(e) {}
+      });
+
+      // 3. 모든 payment-widget-cache 클래스 제거
+      document.querySelectorAll('*[class*="payment-widget-cache"]').forEach(el => {
+        try {
+          el.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;position:absolute!important;top:-99999px!important;left:-99999px!important;z-index:-99999!important;pointer-events:none!important;';
+          el.remove();
+        } catch(e) {}
+      });
+
+      // 4. 텍스트 기반 검색으로 제거
+      document.querySelectorAll('*').forEach(el => {
+        try {
+          const text = el.textContent || '';
+          const html = el.innerHTML || '';
+          if (text.includes('테스트 환경') || text.includes('실제로 결제되지 않습니다') || 
+              html.includes('테스트 환경') || html.includes('실제로 결제되지 않습니다')) {
+            
+            // 완전 박멸 스타일 적용
+            el.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;max-height:0!important;max-width:0!important;min-height:0!important;min-width:0!important;padding:0!important;margin:0!important;border:none!important;outline:none!important;box-shadow:none!important;background:transparent!important;color:transparent!important;font-size:0!important;line-height:0!important;overflow:hidden!important;position:absolute!important;top:-99999px!important;left:-99999px!important;right:-99999px!important;bottom:-99999px!important;z-index:-99999!important;pointer-events:none!important;user-select:none!important;cursor:none!important;transform:scale(0)!important;clip:rect(0,0,0,0)!important;';
+            
+            // 클래스와 ID 제거
+            el.className = '';
+            el.id = '';
+            
+            // 내용 제거
+            el.innerHTML = '';
+            el.textContent = '';
+            
+            // DOM에서 완전 제거
+            el.remove();
+          }
+        } catch(e) {}
+      });
+
+      // 5. CSS 변수 기반 검색
+      document.querySelectorAll('*[style*="--pc-alert"]').forEach(el => {
+        try {
+          el.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;position:absolute!important;top:-99999px!important;left:-99999px!important;z-index:-99999!important;pointer-events:none!important;';
+          el.remove();
+        } catch(e) {}
+      });
+
+      // 6. TDS 관련 요소 제거
+      document.querySelectorAll('*[data-tds-desktop-icon-button-theme], *[data-tds-desktop-icon-button-mode], *[data-tds-icon-desktop-button-focus-ring-reverse]').forEach(el => {
+        try {
+          if (el.closest('*[role="alert"]') || el.textContent?.includes('테스트') || el.textContent?.includes('실제로 결제되지')) {
+            el.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;position:absolute!important;top:-99999px!important;left:-99999px!important;z-index:-99999!important;pointer-events:none!important;';
+            el.remove();
+          }
+        } catch(e) {}
+      });
+
+      // 7. SVG 아이콘까지 제거
+      document.querySelectorAll('svg').forEach(svg => {
+        try {
+          const parent = svg.closest('*[role="alert"]') || svg.closest('*[class*="payment-widget-cache"]');
+          if (parent) {
+            svg.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;position:absolute!important;top:-99999px!important;left:-99999px!important;z-index:-99999!important;pointer-events:none!important;';
+            svg.remove();
+          }
+        } catch(e) {}
+      });
+    };
+
+    // DOM 로드 즉시 실행
+    nuclearRemoveTestMessages();
+
+    // 여러 시점에서 실행
+    setTimeout(nuclearRemoveTestMessages, 1);
+    setTimeout(nuclearRemoveTestMessages, 10);
+    setTimeout(nuclearRemoveTestMessages, 50);
+    setTimeout(nuclearRemoveTestMessages, 100);
+    setTimeout(nuclearRemoveTestMessages, 200);
+    setTimeout(nuclearRemoveTestMessages, 500);
+    setTimeout(nuclearRemoveTestMessages, 1000);
+    setTimeout(nuclearRemoveTestMessages, 2000);
+
+    // 매우 자주 실행
+    const aggressiveInterval = setInterval(nuclearRemoveTestMessages, 50);
+
+    // 실시간 감시 및 즉시 제거
+    const aggressiveObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) { // Element node
+            const element = node as Element;
+            
+            // 즉시 검사하고 제거
+            if (element.getAttribute('role') === 'alert' ||
+                element.className?.includes('payment-widget-cache') ||
+                element.id?.includes('radix') ||
+                element.textContent?.includes('테스트 환경') ||
+                element.textContent?.includes('실제로 결제되지 않습니다')) {
+              
+              try {
+                element.style.cssText = 'display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;position:absolute!important;top:-99999px!important;left:-99999px!important;z-index:-99999!important;pointer-events:none!important;';
+                element.remove();
+              } catch(e) {}
+            }
+          }
+        });
+      });
+      
+      // 변경 후 즉시 전체 스캔
+      setTimeout(nuclearRemoveTestMessages, 1);
+    });
+
+    aggressiveObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'id', 'role', 'style', 'aria-describedby'],
+      characterData: true
+    });
+
+    return () => {
+      clearInterval(aggressiveInterval);
+      aggressiveObserver.disconnect();
+    };
+  }, [paymentReady]);
 
   // 전화번호 형식 정리 함수
   const formatPhoneNumber = (phone: string): string | null => {
@@ -214,6 +551,12 @@ function CheckoutPageContent() {
 
   const handlePayment = async () => {
     try {
+      // 인증 상태 재확인
+      if (authLoading) {
+        alert('사용자 인증을 확인하는 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      
       if (!paymentWidgetRef.current || !user) {
         throw new Error('결제 정보가 준비되지 않았습니다.');
       }
@@ -309,13 +652,18 @@ function CheckoutPageContent() {
     }
   };
 
-  if (loading || !directItemsLoaded) {
+  if (loading || !directItemsLoaded || authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">
-            {isDirect ? '바로 구매 정보를 불러오는 중...' : '결제 정보를 불러오는 중...'}
+            {authLoading 
+              ? '사용자 인증을 확인하는 중...' 
+              : isDirect 
+                ? '바로 구매 정보를 불러오는 중...' 
+                : '결제 정보를 불러오는 중...'
+            }
           </p>
         </div>
       </div>
@@ -586,14 +934,19 @@ function CheckoutPageContent() {
                 {/* 결제 버튼 */}
                 <button
                   onClick={handlePayment}
-                  disabled={!paymentReady || !agreeToTerms}
+                  disabled={!paymentReady || !agreeToTerms || authLoading}
                   className={`w-full py-4 rounded-lg font-medium text-white transition-colors ${
-                    paymentReady && agreeToTerms
+                    paymentReady && agreeToTerms && !authLoading
                       ? 'bg-primary hover:bg-primary/90'
                       : 'bg-muted-foreground cursor-not-allowed'
                   }`}
                 >
-                  {!paymentReady ? '결제 준비 중...' : `${finalAmount.toLocaleString()}원 결제하기`}
+                  {authLoading 
+                    ? '사용자 인증 확인 중...' 
+                    : !paymentReady 
+                      ? '결제 준비 중...' 
+                      : `${finalAmount.toLocaleString()}원 결제하기`
+                  }
                 </button>
 
                 {/* 보안 안내 */}

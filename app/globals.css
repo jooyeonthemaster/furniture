@@ -145,4 +145,96 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground;
   }
+
+  /* 토스페이먼츠 테스트 환경 메시지 완전 박멸 */
+  
+  /* 모든 가능한 클래스명 타겟팅 */
+  .payment-widget-cache-1w0clqj,
+  .payment-widget-cache-1db4li2,
+  .payment-widget-cache-1o8j7f2,
+  .payment-widget-cache-z32lwb,
+  .payment-widget-cache-1smfk4g,
+  .payment-widget-cache-1e4e9cy,
+  .payment-widget-cache-amrvyn,
+  [class*="payment-widget-cache"],
+  [class^="payment-widget-cache"],
+  [class$="payment-widget-cache"],
+  div[role="alert"][aria-describedby*="radix-"],
+  div[id*="radix-"],
+  *[class*="payment-widget"],
+  *[id*="radix"],
+  
+  /* 모든 alert 역할의 div */
+  div[role="alert"],
+  *[role="alert"],
+  
+  /* 토스페이먼츠 관련 모든 요소 */
+  *[class*="tds-"],
+  *[data-tds-desktop-icon-button-theme],
+  *[data-tds-desktop-icon-button-mode],
+  *[data-tds-icon-desktop-button-focus-ring-reverse],
+  
+  /* SVG 아이콘도 포함 */
+  div[role="alert"] svg,
+  div[role="alert"] span,
+  div[role="alert"] button,
+  
+  /* 인라인 스타일로 숨겨진 것들도 강제로 */
+  *[style*="--pc-alert-color"],
+  *[style*="--pc-alert-background-color"],
+  *[style*="--pc-alert-min-height"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    max-height: 0 !important;
+    max-width: 0 !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: transparent !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: -99999px !important;
+    left: -99999px !important;
+    right: -99999px !important;
+    bottom: -99999px !important;
+    z-index: -99999 !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    cursor: none !important;
+    content: "" !important;
+    transform: scale(0) !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(100%) !important;
+  }
+  
+  /* 부모 요소도 함께 숨기기는 JavaScript에서 처리 */
+  
+  /* 전체 결제 위젯 컨테이너에서 alert 제거 */
+  #payment-widget div[role="alert"],
+  #payment-widget *[class*="payment-widget-cache"],
+  #payment-widget *[id*="radix"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    position: absolute !important;
+    top: -99999px !important;
+    left: -99999px !important;
+    z-index: -99999 !important;
+    pointer-events: none !important;
+  }
 }

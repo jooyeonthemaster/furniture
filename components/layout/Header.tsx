@@ -118,7 +118,7 @@ export default function Header() {
                 {/* Furniture 메뉴 */}
                 <div 
                   className="relative"
-                  onMouseEnter={() => handleMenuEnter('furniture')}
+                  // onMouseEnter={() => handleMenuEnter('furniture')} // 드롭다운 기능 임시 비활성화
                 >
                   <Link 
                     href="/category/furniture/224/" 
@@ -127,8 +127,8 @@ export default function Header() {
                     Furniture
                   </Link>
 
-                  {/* 메가메뉴들... (기존 메가메뉴 모두 유지) */}
-                  {activeMenu === 'furniture' && (
+                  {/* 메가메뉴들... (기존 메가메뉴 모두 유지) - 임시 주석처리 */}
+                  {/* {activeMenu === 'furniture' && (
                     <div className="absolute top-full left-0 w-screen bg-white border-t shadow-lg">
                       <div className="px-4 lg:px-8 py-6">
                         <ul className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
@@ -201,9 +201,10 @@ export default function Header() {
                         </ul>
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
 
+                {/* Lighting 메뉴 - 임시 주석처리
                 <div 
                   className="relative"
                   onMouseEnter={() => handleMenuEnter('lighting')}
@@ -233,8 +234,10 @@ export default function Header() {
                     </div>
                   )}
                 </div>
+                */}
 
                 {/* 중간 화면에서도 표시되는 메뉴들 */}
+                {/* Kitchen 메뉴 - 임시 주석처리
                 <div 
                   className="relative hidden xl:block"
                   onMouseEnter={() => handleMenuEnter('kitchen')}
@@ -268,7 +271,9 @@ export default function Header() {
                     </div>
                   )}
                 </div>
+                */}
 
+                {/* Accessories 메뉴 - 임시 주석처리
                 <div 
                   className="relative hidden xl:block"
                   onMouseEnter={() => handleMenuEnter('accessories')}
@@ -306,11 +311,12 @@ export default function Header() {
                     </div>
                   )}
                 </div>
+                */}
 
                 {/* Sale - 항상 표시 (중요) */}
                 <div 
                   className="relative"
-                  onMouseEnter={() => handleMenuEnter('sale')}
+                  // onMouseEnter={() => handleMenuEnter('sale')} // 드롭다운 기능 임시 비활성화
                 >
                   <Link 
                     href="/category/sale/233/" 
@@ -319,6 +325,7 @@ export default function Header() {
                     Sale
                   </Link>
 
+                  {/* Sale 드롭다운 메뉴 임시 주석처리
                   {activeMenu === 'sale' && (
                     <div className="absolute top-full left-0 w-screen bg-white border-t shadow-lg">
                       <div className="px-4 lg:px-8 py-6">
@@ -331,7 +338,7 @@ export default function Header() {
                         </ul>
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* 더보기 메뉴 - 작은 화면에서 숨겨진 메뉴들 */}
@@ -347,8 +354,10 @@ export default function Header() {
                   {showMoreMenu && (
                     <div className="absolute top-full right-0 w-48 bg-white border shadow-lg rounded-lg z-50">
                       <div className="py-2">
+                        {/* 임시 주석처리
                         <Link href="/category/kitchen/227/" className="block px-4 py-2 text-sm hover:bg-gray-50">Kitchen</Link>
                         <Link href="/category/accessories/229/" className="block px-4 py-2 text-sm hover:bg-gray-50">Accessories</Link>
+                        */}
                         <Link href="/category/textile/226/" className="block px-4 py-2 text-sm hover:bg-gray-50">Textile</Link>
                         <Link href="/category/kids/2596/" className="block px-4 py-2 text-sm hover:bg-gray-50">Kids</Link>
                         <Link href="/category/book/3021/" className="block px-4 py-2 text-sm hover:bg-gray-50">Book</Link>
@@ -381,7 +390,7 @@ export default function Header() {
 
                 <div 
                   className="relative hidden 2xl:block"
-                  onMouseEnter={() => handleMenuEnter('curation')}
+                  // onMouseEnter={() => handleMenuEnter('curation')} // 드롭다운 기능 임시 비활성화
                 >
                   <Link 
                     href="/curation" 
@@ -390,6 +399,7 @@ export default function Header() {
                     Curation
                   </Link>
 
+                  {/* Curation 드롭다운 메뉴 임시 주석처리
                   {activeMenu === 'curation' && (
                     <div className="absolute top-full left-0 w-screen bg-white border-t shadow-lg">
                       <div className="px-4 lg:px-8 py-6">
@@ -403,7 +413,7 @@ export default function Header() {
                         </ul>
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 <Link 
@@ -692,9 +702,11 @@ export default function Header() {
               <nav className="px-2 space-y-1">
                 <Link href="/category/new/223/" className="block px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>New</Link>
                 <Link href="/category/furniture/224/" className="block px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>Furniture</Link>
+                {/* 임시 주석처리
                 <Link href="/category/lighting/225/" className="block px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>Lighting</Link>
                 <Link href="/category/kitchen/227/" className="block px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>Kitchen</Link>
                 <Link href="/category/accessories/229/" className="block px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>Accessories</Link>
+                */}
                 <Link href="/category/textile/226/" className="block px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>Textile</Link>
                 <Link href="/category/kids/2596/" className="block px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>Kids</Link>
                 <Link href="/category/book/3021/" className="block px-2 py-2 text-base font-medium rounded-md hover:bg-gray-50" onClick={() => setMobileMenuOpen(false)}>Book</Link>

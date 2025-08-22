@@ -1,8 +1,8 @@
 // Service Worker for Push Notifications
 const CACHE_NAME = 'luxe-furniture-v1';
 const urlsToCache = [
-  '/',
-  '/offline.html'
+  '/'
+  // '/offline.html' - 파일이 없으므로 제거
 ];
 
 // Install event
