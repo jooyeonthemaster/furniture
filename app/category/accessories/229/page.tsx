@@ -10,6 +10,157 @@ import PageLayout from '@/components/layout/PageLayout';
 import { getAllProducts } from '@/lib/products';
 import { Product } from '@/types';
 
+// 액세서리 카테고리 목업 데이터
+const accessoriesMockData: Product[] = [
+  {
+    id: 'acc-1',
+    name: 'Alessi Juicy Salif Citrus Squeezer 알레시 주시 살리프',
+    brand: 'Alessi',
+    category: 'accessories',
+    description: '필리프 스타크가 디자인한 아이코닉한 레몬 짜개. 기능을 넘어선 조각품 같은 키친 액세서리입니다.',
+    originalPrice: 180000,
+    salePrice: 126000,
+    discount: 30,
+    condition: 'new',
+    images: ['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80'],
+    stock: 8,
+    featured: true,
+    source: 'model-house',
+    tags: ['키친', '필리프스타크', '아이코닉'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 234,
+    likes: 28,
+    colors: ['스테인리스']
+  },
+  {
+    id: 'acc-2',
+    name: 'Vitra Wooden Dolls 비트라 우든 돌',
+    brand: 'Vitra',
+    category: 'accessories',
+    description: '알렉산더 지라드가 디자인한 나무 인형 컬렉션. 공간에 따뜻함과 개성을 더하는 디자인 오브제입니다.',
+    originalPrice: 120000,
+    salePrice: 84000,
+    discount: 30,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 12,
+    featured: true,
+    source: 'model-house',
+    tags: ['오브제', '나무', '컬렉션'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 189,
+    likes: 22,
+    colors: ['내추럴', '컬러풀']
+  },
+  {
+    id: 'acc-3',
+    name: 'Kartell Bookworm Shelf 카르텔 북웜 선반',
+    brand: 'Kartell',
+    category: 'accessories',
+    description: '론 아라드가 디자인한 구불구불한 책장. 벽에 자유롭게 설치하여 독특한 인테리어 포인트를 만들 수 있습니다.',
+    originalPrice: 850000,
+    salePrice: 595000,
+    discount: 30,
+    condition: 'excellent',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 3,
+    featured: true,
+    source: 'exhibition',
+    tags: ['선반', '벽걸이', '유니크'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 345,
+    likes: 31,
+    colors: ['화이트', '블랙', '레드']
+  },
+  {
+    id: 'acc-4',
+    name: 'Hay Kaleido Tray 헤이 칼레이도 트레이',
+    brand: 'HAY',
+    category: 'accessories',
+    description: '덴마크 HAY의 기하학적 패턴 트레이. 다양한 크기와 컬러로 스타일링의 재미를 더하는 액세서리입니다.',
+    originalPrice: 45000,
+    salePrice: 31500,
+    discount: 30,
+    condition: 'new',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 15,
+    featured: false,
+    source: 'model-house',
+    tags: ['트레이', '기하학', '컬러풀'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 98,
+    likes: 12,
+    colors: ['핑크', '블루', '옐로우']
+  },
+  {
+    id: 'acc-5',
+    name: 'Muuto Dots Coat Hooks 무토 닷츠 코트 훅',
+    brand: 'Muuto',
+    category: 'accessories',
+    description: '덴마크 무토의 미니멀한 벽걸이 훅. 다양한 크기와 컬러로 벽면을 아름답게 장식하면서 실용성도 갖춘 제품입니다.',
+    originalPrice: 25000,
+    salePrice: 17500,
+    discount: 30,
+    condition: 'new',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 20,
+    featured: false,
+    source: 'model-house',
+    tags: ['벽걸이', '훅', '미니멀'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 156,
+    likes: 18,
+    colors: ['화이트', '블랙', '우드']
+  },
+  {
+    id: 'acc-6',
+    name: 'Iittala Aalto Vase 이딸라 알토 화병',
+    brand: 'Iittala',
+    category: 'accessories',
+    description: '알바 알토가 디자인한 핀란드의 대표적인 유리 화병. 유기적인 곡선이 아름다운 시대를 초월한 디자인입니다.',
+    originalPrice: 180000,
+    salePrice: 126000,
+    discount: 30,
+    condition: 'excellent',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 6,
+    featured: false,
+    source: 'exhibition',
+    tags: ['화병', '유리', '핀란드'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 167,
+    likes: 21,
+    colors: ['클리어', '블루', '그린']
+  },
+  {
+    id: 'acc-7',
+    name: 'Georg Jensen Cobra Candleholder 게오르그 옌센 코브라',
+    brand: 'Georg Jensen',
+    category: 'accessories',
+    description: '덴마크 실버스미스 게오르그 옌센의 코브라 컬렉션. 뱀의 우아한 곡선을 모티브로 한 촛대입니다.',
+    originalPrice: 320000,
+    salePrice: 224000,
+    discount: 30,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 4,
+    featured: false,
+    source: 'model-house',
+    tags: ['촛대', '실버', '덴마크'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 123,
+    likes: 15,
+    colors: ['실버', '골드']
+  }
+];
+
 export default function AccessoriesPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -31,10 +182,14 @@ export default function AccessoriesPage() {
           product.name.includes('오브제') ||
           product.name.includes('캔들')
         );
-        setProducts(accessoryProducts);
-        setFilteredProducts(accessoryProducts);
+        // 실제 데이터가 없으면 목업 데이터 사용
+        const finalProducts = accessoryProducts.length > 0 ? accessoryProducts : accessoriesMockData;
+        setProducts(finalProducts);
+        setFilteredProducts(finalProducts);
       } catch (error) {
-        console.error('상품 로드 실패:', error);
+        console.error('상품 로드 실패, 목업 데이터 사용:', error);
+        setProducts(accessoriesMockData);
+        setFilteredProducts(accessoriesMockData);
       } finally {
         setLoading(false);
       }
@@ -74,7 +229,7 @@ export default function AccessoriesPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl xs:text-3xl md:text-5xl font-light mb-4 font-serif"
           >
-            Accessories
+            액세서리
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}

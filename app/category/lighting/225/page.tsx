@@ -10,6 +10,178 @@ import ProductFilter from '@/components/features/ProductFilter';
 import { getAllProducts } from '@/lib/products';
 import { Product } from '@/types';
 
+// 조명 카테고리 목업 데이터
+const lightingMockData: Product[] = [
+  {
+    id: 'lighting-1',
+    name: 'Tom Dixon Beat Light Tall 톰 딕슨 비트 라이트 톨',
+    brand: 'Tom Dixon',
+    category: 'lighting',
+    description: '수공예 황동으로 제작된 톰 딕슨의 대표작. 따뜻하고 부드러운 빛으로 공간에 고급스러운 분위기를 연출합니다.',
+    originalPrice: 850000,
+    salePrice: 510000,
+    discount: 40,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=800&q=80'],
+    stock: 3,
+    featured: true,
+    source: 'model-house',
+    tags: ['펜던트', '황동', '디자이너'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 234,
+    likes: 18,
+    colors: ['골드', '브론즈']
+  },
+  {
+    id: 'lighting-2',
+    name: 'Flos Arco Floor Lamp 플로스 아르코 플로어 램프',
+    brand: 'Flos',
+    category: 'lighting',
+    description: '이탈리아 명품 조명의 아이콘. 대리석 베이스와 스테인리스 스틸 아암의 완벽한 조화로 공간에 우아함을 더합니다.',
+    originalPrice: 3200000,
+    salePrice: 1920000,
+    discount: 40,
+    condition: 'excellent',
+    images: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80'],
+    stock: 2,
+    featured: true,
+    source: 'exhibition',
+    tags: ['플로어램프', '대리석', '이탈리아'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 456,
+    likes: 32,
+    colors: ['화이트', '블랙']
+  },
+  {
+    id: 'lighting-3',
+    name: 'Louis Poulsen PH5 루이스 폴센 PH5',
+    brand: 'Louis Poulsen',
+    category: 'lighting',
+    description: '덴마크 디자인의 걸작. 눈부심 없는 완벽한 조명 설계로 식탁 위 조명의 표준이 된 제품입니다.',
+    originalPrice: 680000,
+    salePrice: 476000,
+    discount: 30,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=800&q=80'],
+    stock: 5,
+    featured: true,
+    source: 'model-house',
+    tags: ['펜던트', '덴마크', '클래식'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 189,
+    likes: 24,
+    colors: ['화이트', '레드', '그린']
+  },
+  {
+    id: 'lighting-4',
+    name: 'Artemide Tolomeo Table Lamp 아르테미데 톨로메오',
+    brand: 'Artemide',
+    category: 'lighting',
+    description: '이탈리아 아르테미데의 베스트셀러. 각도 조절이 자유로운 태스크 램프로 작업 공간에 최적화되어 있습니다.',
+    originalPrice: 420000,
+    salePrice: 294000,
+    discount: 30,
+    condition: 'excellent',
+    images: ['https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=800&q=80'],
+    stock: 4,
+    featured: false,
+    source: 'model-house',
+    tags: ['테이블램프', '조절가능', '이탈리아'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 123,
+    likes: 15,
+    colors: ['실버', '블랙']
+  },
+  {
+    id: 'lighting-5',
+    name: 'Foscarini Twiggy Floor Lamp 포스카리니 트위기',
+    brand: 'Foscarini',
+    category: 'lighting',
+    description: '마크 사들러가 디자인한 혁신적인 플로어 램프. 가벼운 소재로 만든 대형 조명으로 공간에 극적인 효과를 연출합니다.',
+    originalPrice: 1200000,
+    salePrice: 840000,
+    discount: 30,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80'],
+    stock: 2,
+    featured: false,
+    source: 'exhibition',
+    tags: ['플로어램프', '대형', '혁신적'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 167,
+    likes: 21,
+    colors: ['화이트', '블랙', '레드']
+  },
+  {
+    id: 'lighting-6',
+    name: 'Muuto Fluid Pendant 무토 플루이드 펜던트',
+    brand: 'Muuto',
+    category: 'lighting',
+    description: '덴마크 브랜드 무토의 유기적인 형태의 펜던트 조명. 부드러운 곡선으로 공간에 따뜻함을 더합니다.',
+    originalPrice: 380000,
+    salePrice: 266000,
+    discount: 30,
+    condition: 'new',
+    images: ['https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=800&q=80'],
+    stock: 6,
+    featured: false,
+    source: 'model-house',
+    tags: ['펜던트', '유기적', '덴마크'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 98,
+    likes: 12,
+    colors: ['베이지', '그레이']
+  },
+  {
+    id: 'lighting-7',
+    name: 'Vitra Akari Light Sculpture 비트라 아카리',
+    brand: 'Vitra',
+    category: 'lighting',
+    description: '이사무 노구치가 디자인한 일본 전통 등의 현대적 해석. 종이와 대나무로 만든 조각 같은 조명입니다.',
+    originalPrice: 320000,
+    salePrice: 224000,
+    discount: 30,
+    condition: 'excellent',
+    images: ['https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=800&q=80'],
+    stock: 8,
+    featured: false,
+    source: 'model-house',
+    tags: ['테이블램프', '일본', '종이'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 145,
+    likes: 19,
+    colors: ['화이트', '내추럴']
+  },
+  {
+    id: 'lighting-8',
+    name: 'Hay Matin Table Lamp 헤이 마틴 테이블 램프',
+    brand: 'HAY',
+    category: 'lighting',
+    description: '덴마크 HAY의 미니멀한 테이블 램프. 간결한 형태와 부드러운 빛으로 침실이나 거실에 완벽합니다.',
+    originalPrice: 180000,
+    salePrice: 126000,
+    discount: 30,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=800&q=80'],
+    stock: 10,
+    featured: false,
+    source: 'model-house',
+    tags: ['테이블램프', '미니멀', '덴마크'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 87,
+    likes: 11,
+    colors: ['베이지', '블랙']
+  }
+];
+
 export default function LightingPage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -19,21 +191,24 @@ export default function LightingPage() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
+        // 실제 데이터와 목업 데이터 조합
         const products = await getAllProducts();
-        // 조명 관련 상품들 필터링
         const lightingProducts = products.filter(product => 
           product.category === 'lighting' ||
-          // 레거시 카테고리 지원
-          (product.category as string) === 'lighting' ||
           product.name.includes('조명') || 
           product.name.includes('램프') || 
           product.name.includes('라이트') ||
           product.name.includes('스탠드')
         );
-        setAllProducts(lightingProducts);
-        setFilteredProducts(lightingProducts);
+        
+        // 실제 데이터가 없으면 목업 데이터 사용
+        const finalProducts = lightingProducts.length > 0 ? lightingProducts : lightingMockData;
+        setAllProducts(finalProducts);
+        setFilteredProducts(finalProducts);
       } catch (error) {
-        console.error('상품 로드 실패:', error);
+        console.error('상품 로드 실패, 목업 데이터 사용:', error);
+        setAllProducts(lightingMockData);
+        setFilteredProducts(lightingMockData);
       } finally {
         setLoading(false);
       }
@@ -65,7 +240,7 @@ export default function LightingPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl xs:text-3xl md:text-5xl font-light mb-4 font-serif"
           >
-            Lighting
+            조명
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -73,7 +248,7 @@ export default function LightingPage() {
             transition={{ delay: 0.1 }}
             className="text-lg xs:text-base opacity-70 max-w-2xl mx-auto"
           >
-            공간을 밝히는 아름다운 조명 컬렉션
+            쓸만한 가의 세련된 조명으로 공간에 특별한 분위기를 연출하세요
           </motion.p>
         </div>
       </section>

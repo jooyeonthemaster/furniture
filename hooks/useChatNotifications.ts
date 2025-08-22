@@ -69,7 +69,7 @@ export function useChatNotifications() {
         // 브라우저 알림 표시 (권한이 있는 경우)
         if (Notification.permission === 'granted') {
           try {
-            new Notification('LUXE FURNITURE - 새로운 메시지', {
+            new Notification('쓸만한 가 - 새로운 메시지', {
               body: newestMessage.content.slice(0, 100),
               icon: '/icon-192x192.png',
               badge: '/badge-72x72.png',

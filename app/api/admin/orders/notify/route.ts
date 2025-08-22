@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // 이메일 템플릿 생성
     const emailTemplate = {
       to: userData.email,
-      subject: `[LUXE FURNITURE] 배송이 시작되었습니다 - 주문번호: ${orderData.orderNumber}`,
+      subject: `[쓸만한 가] 배송이 시작되었습니다 - 주문번호: ${orderData.orderNumber}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <h1 style="color: #2c3e50; margin: 0;">LUXE FURNITURE</h1>
+            <h1 style="color: #2c3e50; margin: 0;">쓸만한 가</h1>
             <p style="color: #666; margin: 5px 0 0 0;">럭셔리 가구 쇼핑몰</p>
           </div>
 
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
             <p>배송 관련 문의사항이 있으시면 고객센터로 연락해 주세요.</p>
             <p>고객센터: 1588-0000 | 이메일: support@luxefurniture.com</p>
             <p style="margin-top: 20px; text-align: center; color: #999;">
-              © 2024 LUXE FURNITURE. All rights reserved.
+              © 2024 쓸만한 가. All rights reserved.
             </p>
           </div>
         </body>

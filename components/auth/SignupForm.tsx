@@ -108,7 +108,7 @@ export default function SignupForm({
         className="text-center mb-8"
       >
         <h1 className="text-3xl xs:text-2xl font-light mb-2">회원가입</h1>
-        <p className="text-muted-foreground">LUXE와 함께 시작하세요</p>
+        <p className="text-muted-foreground">쓸만한 가와 함께 시작하세요</p>
       </motion.div>
 
       {/* 에러 메시지 */}

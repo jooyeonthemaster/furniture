@@ -96,12 +96,12 @@ export default function HomePage() {
   };
 
   const categories = [
-    { name: '거실', count: 156, image: '/SEATING.jpg' },
-    { name: '침실', count: 89, image: '/hero.jpg' },
-    { name: '주방/식당', count: 124, image: '/STORAGE.jpg' },
-    { name: '서재', count: 78, image: '/exhibition.jpg' },
-    { name: '조명', count: 203, image: '/LIGHTING.jpg' },
-    { name: '액세서리', count: 92, image: '/modelhouse.jpg' },
+    { name: '거실', count: 156, image: '/SEATING.jpg', path: '/category/furniture/224' },
+    { name: '침실', count: 89, image: '/hero.jpg', path: '/category/furniture/224?filter=bedroom' },
+    { name: '주방/식당', count: 124, image: '/STORAGE.jpg', path: '/category/kitchen/227' },
+    { name: '서재', count: 78, image: '/exhibition.jpg', path: '/category/book/3021' },
+    { name: '조명', count: 203, image: '/LIGHTING.jpg', path: '/category/lighting/225' },
+    { name: '액세서리', count: 92, image: '/modelhouse.jpg', path: '/category/accessories/229' },
   ];
 
   return (
@@ -225,7 +225,7 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 className="group cursor-pointer"
               >
-                <Link href={`/categories/${category.name}`}>
+                <Link href={category.path}>
                   <div className="relative aspect-square overflow-hidden rounded-lg mb-4 xs:mb-3">
                     <Image
                       src={category.image}

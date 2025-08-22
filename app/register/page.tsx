@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import PageLayout from '@/components/layout/PageLayout';
 import SignupForm from '@/components/auth/SignupForm';
 import LoginForm from '@/components/auth/LoginForm';
@@ -33,9 +34,16 @@ export default function RegisterPage() {
             <div className="bg-background border border-border rounded-lg p-8 xs:p-6 shadow-lg">
               {/* 로고 */}
               <div className="text-center mb-8">
-                <h1 className="text-3xl xs:text-2xl font-light tracking-widest mb-2">
-                  LUXE
-                </h1>
+                <div className="flex justify-center mb-4">
+                  <Image
+                    src="/logo.jpg"
+                    alt="LUXE FURNITURE"
+                    width={120}
+                    height={60}
+                    className="object-contain"
+                    priority
+                  />
+                </div>
                 <p className="text-sm text-muted-foreground">
                   프리미엄 중고 디자이너 가구
                 </p>

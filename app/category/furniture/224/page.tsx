@@ -66,7 +66,7 @@ export default function FurniturePage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl xs:text-3xl md:text-5xl font-light mb-4 font-serif"
           >
-            Furniture
+            거실 가구
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -74,7 +74,7 @@ export default function FurniturePage() {
             transition={{ delay: 0.1 }}
             className="text-lg xs:text-base opacity-70 max-w-2xl mx-auto"
           >
-            당신의 공간을 완성하는 프리미엄 가구 컬렉션
+            쓸만한 가의 엄선된 거실 가구로 당신만의 공간을 완성하세요
           </motion.p>
         </div>
       </section>

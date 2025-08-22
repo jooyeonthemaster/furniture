@@ -19,13 +19,15 @@ export default function NewPage() {
     const loadProducts = async () => {
       try {
         const allProducts = await getAllProducts();
-        // 최신 상품들 (생성일 기준 최신순)
+        // 최신 상품들 (생성일 기준 최신순으로 모든 상품 표시)
         const newProducts = allProducts
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 20); // 최신 20개만
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        
         setProducts(newProducts);
+        console.log('✅ New 페이지: 실제 상품 데이터 로드 완료', newProducts.length, '개 상품');
       } catch (error) {
-        console.error('상품 로드 실패:', error);
+        console.error('❌ 상품 로드 실패:', error);
+        setProducts([]); // 실제 데이터만 사용, 목업 데이터 사용 안 함
       } finally {
         setLoading(false);
       }
@@ -65,7 +67,7 @@ export default function NewPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl xs:text-3xl md:text-5xl font-light mb-4 font-serif"
           >
-            New Arrivals
+            NEW ARRIVALS
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -73,7 +75,7 @@ export default function NewPage() {
             transition={{ delay: 0.1 }}
             className="text-lg xs:text-base opacity-70 max-w-2xl mx-auto"
           >
-            새롭게 입고된 프리미엄 가구들을 가장 먼저 만나보세요
+            Discover the latest premium furniture pieces freshly added to our collection
           </motion.p>
         </div>
       </section>

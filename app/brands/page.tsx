@@ -10,6 +10,7 @@ import PageLayout from '@/components/layout/PageLayout';
 const brands = [
   {
     id: 1,
+    slug: 'herman-miller',
     name: 'Herman Miller',
     country: '미국',
     founded: 1905,
@@ -26,6 +27,7 @@ const brands = [
   },
   {
     id: 2,
+    slug: 'bb-italia',
     name: 'B&B Italia',
     country: '이탈리아',
     founded: 1966,
@@ -42,6 +44,7 @@ const brands = [
   },
   {
     id: 3,
+    slug: 'cassina',
     name: 'Cassina',
     country: '이탈리아',
     founded: 1927,
@@ -62,7 +65,7 @@ const brands = [
     country: '덴마크',
     founded: 2002,
     description: '북유럽 모던 디자인의 새로운 바람',
-    logo: '/STORAGE .jpg',
+    logo: '/STORAGE.jpg',
     banner: '/modelhouse.jpg',
     productCount: 98,
     rating: 4.6,
@@ -79,7 +82,7 @@ const brands = [
     founded: 1970,
     description: '컨템포러리 엘레간스의 완성',
     logo: '/LIGHTING.jpg',
-    banner: '/STORAGE .jpg',
+    banner: '/STORAGE.jpg',
     productCount: 123,
     rating: 4.7,
     reviews: 567,
@@ -198,7 +201,7 @@ export default function BrandsPage() {
                 viewport={{ once: true }}
                 className="group"
               >
-                <Link href={`/brands/${brand.id}`} className="block">
+                <Link href={`/brands/${brand.slug}`} className="block">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-lg mb-4">
                     <Image
                       src={brand.banner}
@@ -308,7 +311,7 @@ export default function BrandsPage() {
                 viewport={{ once: true }}
                 className="group"
               >
-                <Link href={`/brands/${brand.id}`} className="block">
+                <Link href={`/brands/${brand.slug}`} className="block">
                   <div className="border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:border-foreground">
                     {/* 브랜드 로고/이미지 */}
                     <div className="relative w-full h-32 mb-4 rounded overflow-hidden">

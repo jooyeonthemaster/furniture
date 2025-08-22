@@ -65,7 +65,7 @@ export default function BookPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl xs:text-3xl md:text-5xl font-light mb-4 font-serif"
           >
-            Book
+            서재 가구
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}

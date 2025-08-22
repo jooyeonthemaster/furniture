@@ -174,8 +174,29 @@ export function useEditProduct(productId: string) {
     setIsSubmitting(true);
 
     try {
+      // undefined 값을 제거하는 유틸리티 함수
+      const removeUndefinedValues = (obj: any): any => {
+        const result: any = {};
+        
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== undefined) {
+            if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+              // 중첩 객체의 undefined 값도 제거
+              const cleanedValue = removeUndefinedValues(value);
+              if (Object.keys(cleanedValue).length > 0) {
+                result[key] = cleanedValue;
+              }
+            } else {
+              result[key] = value;
+            }
+          }
+        }
+        
+        return result;
+      };
+
       // Firebase에 상품 데이터 업데이트
-      const productData = {
+      const rawProductData = {
         // 기본 정보
         name: form.name,
         brand: form.brand,
@@ -208,9 +229,9 @@ export function useEditProduct(productId: string) {
         hasOptions: form.hasOptions,
         options: form.hasOptions ? form.options : [],
         
-        // 치수 정보 - 자유 입력 형식 지원
+        // 치수 정보 - 자유 입력 형식 지원 (undefined 방지)
         dimensions: form.specifications.dimensions ? (() => {
-          // 숫자x숫자x숫자 형식인 경우에만 파싱, 아니면 undefined로 설정
+          // 숫자x숫자x숫자 형식인 경우에만 파싱
           const dimensionParts = form.specifications.dimensions.split('x');
           if (dimensionParts.length === 3) {
             const width = parseInt(dimensionParts[0]?.trim()) || 0;
@@ -227,8 +248,9 @@ export function useEditProduct(productId: string) {
               };
             }
           }
-          return undefined;
-        })() : undefined,
+          // undefined 대신 null 반환 (Firebase에서 지원)
+          return null;
+        })() : null,
         
         // 소재 및 색상
         materials: form.specifications.material ? [form.specifications.material] : [],
@@ -274,6 +296,9 @@ export function useEditProduct(productId: string) {
         views: 0,
         likes: 0
       };
+
+      // undefined 값 제거
+      const productData = removeUndefinedValues(rawProductData);
       
       console.log('상품 데이터 업데이트 중:', productData);
       

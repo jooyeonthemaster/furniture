@@ -289,7 +289,7 @@ function CheckoutPageContent() {
       // 토스 페이먼츠 결제 요청 - 전화번호 형식 정리
       const paymentData: any = {
         orderId,
-        orderName: `LUXE FURNITURE 주문 ${items.length}건`,
+        orderName: `쓸만한 가 주문 ${items.length}건`,
         customerName: user.name,
         customerEmail: user.email,
         successUrl: `${window.location.origin}/checkout/success`,

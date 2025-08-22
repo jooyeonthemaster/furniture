@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let systemPrompt = `당신은 LUXE라는 명품 중고 가구 쇼핑몰의 전문 AI 상담사입니다. 
+    let systemPrompt = `당신은 쓸만한 가라는 명품 중고 가구 쇼핑몰의 전문 AI 상담사입니다. 
 고객의 질문에 친절하고 전문적으로 답변해주세요.
 
 중요: 응답할 때 마크다운 문법을 절대 사용하지 마세요. 볼드체(**)나 제목(##)이나 코드블록이나 리스트(-) 등 마크다운 문법 없이 일반 텍스트로만 답변해주세요.`;

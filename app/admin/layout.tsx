@@ -78,7 +78,7 @@ export default function AdminLayout({
       `}>
         <div className="flex items-center justify-between p-6 border-b">
           <Link href="/admin" className="text-xl font-light tracking-widest">
-            LUXE ADMIN
+            쓸만한 가 ADMIN
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}

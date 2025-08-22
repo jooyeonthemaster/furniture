@@ -65,7 +65,7 @@ function AiChatContent() {
       if (!productId) {
         setMessages([{
           id: '1',
-          content: '안녕하세요! LUXE 가구 AI 상담사입니다. 궁금한 것이 있으시면 언제든지 물어보세요.',
+          content: '안녕하세요! 쓸만한 가 AI 상담사입니다. 궁금한 것이 있으시면 언제든지 물어보세요.',
           sender: 'ai',
           timestamp: new Date()
         }]);
@@ -79,7 +79,7 @@ function AiChatContent() {
         if (productData) {
           setMessages([{
             id: '1',
-            content: `안녕하세요! LUXE 가구 AI 상담사입니다. 
+            content: `안녕하세요! 쓸만한 가 AI 상담사입니다. 
 
 ${productData.name}에 대해 문의해주셔서 감사합니다. 이 상품에 대한 모든 궁금한 점을 전문적으로 상담해드리겠습니다.
 
@@ -265,7 +265,7 @@ ${productData.name}에 대해 문의해주셔서 감사합니다. 이 상품에 
                   <Bot className="w-5 h-5 text-background" />
                 </div>
                 <div>
-                  <h3 className="font-medium">LUXE AI 상담사</h3>
+                  <h3 className="font-medium">쓸만한 가 AI 상담사</h3>
                   <div className="flex items-center space-x-1 text-sm opacity-60">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span>온라인</span>

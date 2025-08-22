@@ -10,6 +10,136 @@ import PageLayout from '@/components/layout/PageLayout';
 import { getAllProducts } from '@/lib/products';
 import { Product } from '@/types';
 
+// 주방 & 식당 카테고리 목업 데이터
+const kitchenMockData: Product[] = [
+  {
+    id: 'kitchen-1',
+    name: 'Poliform Varenna Kitchen System 폴리폼 바레나 키친',
+    brand: 'Poliform',
+    category: 'kitchen',
+    description: '이탈리아 프리미엄 주방 시스템. 모든 수납공간이 완벽하게 설계된 맞춤형 키친입니다.',
+    originalPrice: 12000000,
+    salePrice: 7200000,
+    discount: 40,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80'],
+    stock: 1,
+    featured: true,
+    source: 'model-house',
+    tags: ['시스템키친', '맞춤제작', '이탈리아'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 567,
+    likes: 43,
+    colors: ['화이트', '우드']
+  },
+  {
+    id: 'kitchen-2',
+    name: 'Bulthaup B3 Kitchen Island 불타웁 B3 키친 아일랜드',
+    brand: 'Bulthaup',
+    category: 'kitchen',
+    description: '독일 프리미엄 브랜드 불타웁의 키친 아일랜드. 기능성과 미학이 완벽하게 조화된 작품입니다.',
+    originalPrice: 8500000,
+    salePrice: 5950000,
+    discount: 30,
+    condition: 'excellent',
+    images: ['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80'],
+    stock: 1,
+    featured: true,
+    source: 'model-house',
+    tags: ['키친아일랜드', '독일', '프리미엄'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 423,
+    likes: 38,
+    colors: ['스테인리스', '우드']
+  },
+  {
+    id: 'kitchen-3',
+    name: 'Cassina Dining Table 카시나 다이닝 테이블',
+    brand: 'Cassina',
+    category: 'kitchen',
+    description: '이탈리아 카시나의 우아한 다이닝 테이블. 견고한 원목과 세련된 디자인이 돋보이는 식탁입니다.',
+    originalPrice: 2800000,
+    salePrice: 1960000,
+    discount: 30,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 2,
+    featured: true,
+    source: 'exhibition',
+    tags: ['다이닝테이블', '원목', '이탈리아'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 289,
+    likes: 25,
+    colors: ['월넛', '오크']
+  },
+  {
+    id: 'kitchen-4',
+    name: 'Vitra Dining Chairs Set 비트라 다이닝 체어 세트',
+    brand: 'Vitra',
+    category: 'kitchen',
+    description: '스위스 비트라의 다이닝 체어 4개 세트. 편안함과 내구성을 모두 갖춘 완벽한 식탁 의자입니다.',
+    originalPrice: 1600000,
+    salePrice: 1120000,
+    discount: 30,
+    condition: 'excellent',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 1,
+    featured: false,
+    source: 'model-house',
+    tags: ['다이닝체어', '세트', '스위스'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 234,
+    likes: 19,
+    colors: ['블랙', '화이트', '우드']
+  },
+  {
+    id: 'kitchen-5',
+    name: 'Alessi Kitchen Accessories Set 알레시 키친 세트',
+    brand: 'Alessi',
+    category: 'kitchen',
+    description: '이탈리아 알레시의 키친 액세서리 풀세트. 기능적이면서도 아름다운 디자인의 주방용품들입니다.',
+    originalPrice: 450000,
+    salePrice: 315000,
+    discount: 30,
+    condition: 'new',
+    images: ['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80'],
+    stock: 5,
+    featured: false,
+    source: 'model-house',
+    tags: ['키친웨어', '세트', '이탈리아'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 156,
+    likes: 14,
+    colors: ['스테인리스', '블랙']
+  },
+  {
+    id: 'kitchen-6',
+    name: 'Kartell Bar Stools 카르텔 바 스툴',
+    brand: 'Kartell',
+    category: 'kitchen',
+    description: '필리프 스타크가 디자인한 투명 바 스툴. 키친 아일랜드나 바 테이블에 완벽한 조합입니다.',
+    originalPrice: 680000,
+    salePrice: 476000,
+    discount: 30,
+    condition: 'like-new',
+    images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&q=80'],
+    stock: 4,
+    featured: false,
+    source: 'model-house',
+    tags: ['바스툴', '투명', '필리프스타크'],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    views: 123,
+    likes: 16,
+    colors: ['투명', '스모크']
+  }
+];
+
 export default function KitchenPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -23,18 +153,27 @@ export default function KitchenPage() {
         const allProducts = await getAllProducts();
         // 주방 관련 상품들 필터링
         const kitchenProducts = allProducts.filter(product => 
+          product.category === 'kitchen' ||
           product.name.includes('주방') || 
           product.name.includes('컵') || 
           product.name.includes('그릇') || 
           product.name.includes('접시') ||
           product.name.includes('식기') ||
           product.name.includes('볼') ||
-          product.name.includes('머그')
+          product.name.includes('머그') ||
+          product.name.includes('식탁') ||
+          product.name.includes('다이닝') ||
+          product.name.includes('키친')
         );
-        setProducts(kitchenProducts);
-        setFilteredProducts(kitchenProducts);
+        
+        // 실제 데이터가 없으면 목업 데이터 사용
+        const finalProducts = kitchenProducts.length > 0 ? kitchenProducts : kitchenMockData;
+        setProducts(finalProducts);
+        setFilteredProducts(finalProducts);
       } catch (error) {
-        console.error('상품 로드 실패:', error);
+        console.error('상품 로드 실패, 목업 데이터 사용:', error);
+        setProducts(kitchenMockData);
+        setFilteredProducts(kitchenMockData);
       } finally {
         setLoading(false);
       }
@@ -74,7 +213,7 @@ export default function KitchenPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl xs:text-3xl md:text-5xl font-light mb-4 font-serif"
           >
-            Kitchen
+            주방 & 식당
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}

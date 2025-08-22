@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: recipientId,
-              title: 'LUXE FURNITURE',
+              title: '쓸만한 가',
               message: `새로운 메시지: ${content.slice(0, 50)}${content.length > 50 ? '...' : ''}`,
               data: {
                 type: 'chat_message',

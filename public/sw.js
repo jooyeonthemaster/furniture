@@ -59,7 +59,7 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification('LUXE FURNITURE', options)
+    self.registration.showNotification('쓸만한 가', options)
   );
 });
 
@@ -84,4 +84,5 @@ self.addEventListener('notificationclick', (event) => {
     );
   }
 });
+
 

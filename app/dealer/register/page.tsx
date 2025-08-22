@@ -9,7 +9,7 @@ import PageLayout from '@/components/layout/PageLayout';
 const dealerBenefits = [
   { icon: TrendingUp, title: '높은 수익성', description: '업계 최고 수준의 수수료율' },
   { icon: User, title: '전담 매니저', description: '1:1 전담 매니저 배정' },
-  { icon: Star, title: '브랜드 신뢰성', description: 'LUXE 브랜드 보증' },
+  { icon: Star, title: '브랜드 신뢰성', description: '쓸만한 가 브랜드 보증' },
   { icon: CreditCard, title: '정산 시스템', description: '투명하고 빠른 정산' }
 ];
 
@@ -151,7 +151,7 @@ export default function DealerRegisterPage() {
             transition={{ delay: 0.1 }}
             className="text-lg xs:text-base opacity-70 max-w-2xl mx-auto"
           >
-            LUXE와 함께 프리미엄 가구 시장에서 성공하세요
+            쓸만한 가와 함께 프리미엄 가구 시장에서 성공하세요
           </motion.p>
         </div>
       </section>

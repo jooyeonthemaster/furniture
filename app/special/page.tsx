@@ -73,7 +73,7 @@ const events = [
     title: '스토리지 솔루션',
     subtitle: '정리의 완성, 수납의 예술',
     description: '폴리폼, 스트링 등의 모듈러 수납 시스템으로 공간을 효율적이고 아름답게 정리하세요.',
-    image: '/STORAGE .jpg',
+    image: '/STORAGE.jpg',
     startDate: '2024-03-01',
     endDate: '2024-03-31',
     discount: 40,
