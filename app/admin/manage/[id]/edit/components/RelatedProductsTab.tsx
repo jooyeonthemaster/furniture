@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, Link2, X } from 'lucide-react';
 import Image from 'next/image';
 import CategoryFilter from '@/components/admin/CategoryFilter';
@@ -20,23 +20,25 @@ export default function RelatedProductsTab({
   productId
 }: RelatedProductsTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const searchRelatedProducts = async () => {
-    if (!searchTerm.trim() && !selectedCategory) return;
-    
+  const searchRelatedProducts = useCallback(async () => {
     setIsSearching(true);
     try {
       let results: Product[] = [];
       
-      if (selectedCategory && !searchTerm.trim()) {
+      if (selectedCategory === 'all' && !searchTerm.trim()) {
+        // 전체 상품 조회
+        results = await searchProducts('', undefined);
+        results = results.filter(product => product.id !== productId);
+      } else if (selectedCategory !== 'all' && !searchTerm.trim()) {
         // 카테고리별 검색
         results = await getProductsByCategory(selectedCategory, productId);
       } else if (searchTerm.trim()) {
         // 텍스트 검색
-        results = await searchProducts(searchTerm, selectedCategory || undefined);
+        results = await searchProducts(searchTerm, selectedCategory === 'all' ? undefined : selectedCategory);
         // 현재 편집 중인 상품 제외
         results = results.filter(product => product.id !== productId);
       }
@@ -48,7 +50,19 @@ export default function RelatedProductsTab({
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [selectedCategory, searchTerm, productId]);
+
+  // 컴포넌트 마운트 시 전체 상품 로드
+  useEffect(() => {
+    searchRelatedProducts();
+  }, [searchRelatedProducts]);
+
+  // 카테고리 변경 시 자동으로 상품 로드
+  useEffect(() => {
+    if (selectedCategory) {
+      searchRelatedProducts();
+    }
+  }, [selectedCategory, searchRelatedProducts]);
 
   const addRelatedProduct = (productId: string) => {
     if (!form.relatedProducts.includes(productId)) {
@@ -89,7 +103,7 @@ export default function RelatedProductsTab({
               <button
                 type="button"
                 onClick={searchRelatedProducts}
-                disabled={isSearching || (!searchTerm.trim() && !selectedCategory)}
+                disabled={isSearching}
                 className="w-full bg-primary text-primary-foreground px-4 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
               >
                 <Search className="w-4 h-4" />
@@ -103,11 +117,22 @@ export default function RelatedProductsTab({
       {/* 카테고리 필터 */}
       <CategoryFilter
         selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
+        onCategoryChange={(category) => {
+          setSelectedCategory(category);
+          setSearchTerm(''); // 카테고리 변경 시 검색어 초기화
+        }}
       />
 
+      {/* 로딩 상태 */}
+      {isSearching && (
+        <div className="bg-card rounded-lg border p-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">상품을 검색하는 중...</p>
+        </div>
+      )}
+
       {/* 검색 결과 */}
-      {searchResults.length > 0 && (
+      {!isSearching && searchResults.length > 0 ? (
         <div className="bg-card rounded-lg border p-6">
           <h4 className="text-md font-medium mb-4">검색 결과 ({searchResults.length}개)</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
@@ -141,6 +166,19 @@ export default function RelatedProductsTab({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      ) : !isSearching && (
+        <div className="bg-card rounded-lg border p-6 text-center">
+          <div className="text-muted-foreground">
+            <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">상품이 없습니다</p>
+            <p className="text-sm">
+              {selectedCategory === 'all' 
+                ? '등록된 상품이 없거나 다른 검색 조건을 시도해보세요.'
+                : `선택한 카테고리에 상품이 없습니다.`
+              }
+            </p>
           </div>
         </div>
       )}

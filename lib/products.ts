@@ -451,7 +451,8 @@ export async function searchProducts(searchTerm: string, category?: string): Pro
     })) as Product[];
     
     // 클라이언트 사이드에서 텍스트 검색 (Firebase에서는 full-text search가 제한적)
-    const filteredProducts = products.filter(product => 
+    // 검색어가 비어있으면 모든 상품 반환
+    const filteredProducts = searchTerm.trim() === '' ? products : products.filter(product => 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase())
