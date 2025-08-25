@@ -17,7 +17,7 @@ interface OverviewImage {
 
 interface OverviewImageUploaderProps {
   images: OverviewImage[];
-  onImagesChange: (images: OverviewImage[]) => void;
+  onImagesChange?: (images: OverviewImage[]) => void; // optional로 변경하여 undefined 허용
   maxImages?: number;
   maxFileSize?: number; // MB
 }
@@ -28,6 +28,20 @@ export default function OverviewImageUploader({
   maxImages = 10,
   maxFileSize = 5
 }: OverviewImageUploaderProps) {
+  // Props 검증 - onImagesChange가 함수가 아닌 경우 렌더링하지 않음
+  if (typeof onImagesChange !== 'function') {
+    console.error('OverviewImageUploader: onImagesChange is not a function:', onImagesChange);
+    return (
+      <div className="border-2 border-dashed rounded-lg p-8 text-center border-yellow-300 bg-yellow-50">
+        <div className="w-12 h-12 bg-yellow-200 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-600"></div>
+        </div>
+        <p className="text-yellow-800 font-medium">이미지 업로더 초기화 중...</p>
+        <p className="text-yellow-600 text-sm mt-1">잠시만 기다려주세요</p>
+      </div>
+    );
+  }
+
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
@@ -106,8 +120,12 @@ export default function OverviewImageUploader({
       const uploadedImages = (await Promise.all(uploadPromises)).filter(Boolean) as OverviewImage[];
       
       if (uploadedImages.length > 0) {
-        onImagesChange([...images, ...uploadedImages]);
-        console.log('개요 이미지 업로드 완료:', uploadedImages.length, '개');
+        if (typeof onImagesChange === 'function') {
+          onImagesChange([...images, ...uploadedImages]);
+          console.log('개요 이미지 업로드 완료:', uploadedImages.length, '개');
+        } else {
+          console.error('OverviewImageUploader: onImagesChange is not a function:', onImagesChange);
+        }
       }
     } catch (error) {
       console.error('업로드 중 오류:', error);
@@ -144,32 +162,42 @@ export default function OverviewImageUploader({
   };
 
   const handleReorder = (newImages: OverviewImage[]) => {
-    onImagesChange(newImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(newImages);
+    }
   };
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     const newImages = [...images];
     [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
-    onImagesChange(newImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(newImages);
+    }
   };
 
   const handleMoveDown = (index: number) => {
     if (index === images.length - 1) return;
     const newImages = [...images];
     [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
-    onImagesChange(newImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(newImages);
+    }
   };
 
   const handleRemoveImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
-    onImagesChange(newImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(newImages);
+    }
   };
 
   const handleUpdateImageInfo = (index: number, field: 'alt' | 'caption', value: string) => {
     const newImages = [...images];
     newImages[index] = { ...newImages[index], [field]: value };
-    onImagesChange(newImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(newImages);
+    }
   };
 
   const clearErrors = () => {

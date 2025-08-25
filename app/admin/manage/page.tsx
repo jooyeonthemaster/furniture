@@ -6,9 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { 
   Plus, Search, Filter, MoreHorizontal, Edit, Trash2, 
-  Eye, Star, TrendingUp, Package, DollarSign, Copy
+  Eye, Star, TrendingUp, Package, DollarSign, Copy, EyeOff
 } from 'lucide-react';
-import { getAllProducts, deleteProduct } from '@/lib/products';
+import { getAllProducts, deleteProduct, toggleProductActive } from '@/lib/products';
 import { Product } from '@/types';
 import CategoryFilter from '@/components/admin/CategoryFilter';
 
@@ -161,6 +161,29 @@ export default function AdminProductsPage() {
         console.error('상품 삭제 실패:', error);
         alert('상품 삭제에 실패했습니다.');
       }
+    }
+  };
+
+  const handleToggleActive = async (productId: string, currentActive?: boolean) => {
+    // undefined는 활성화로 간주 (기본값)
+    const isCurrentlyActive = currentActive !== false;
+    const newActiveState = !isCurrentlyActive;
+    
+    try {
+      await toggleProductActive(productId, newActiveState);
+      
+      // 로컬 상태 업데이트
+      setProducts(prev => prev.map(p => 
+        p.id === productId 
+          ? { ...p, active: newActiveState }
+          : p
+      ));
+      
+      const actionText = newActiveState ? '활성화' : '비활성화';
+      alert(`상품이 ${actionText}되었습니다.`);
+    } catch (error) {
+      console.error('상품 활성화 상태 변경 실패:', error);
+      alert('상품 상태 변경에 실패했습니다.');
     }
   };
 
@@ -348,7 +371,11 @@ export default function AdminProductsPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.05 }}
-                  className="border-t hover:bg-muted/50"
+                  className={`border-t hover:bg-muted/50 ${
+                    product.active === false 
+                      ? 'bg-gray-50 opacity-60' 
+                      : ''
+                  }`}
                 >
                   <td className="p-4">
                     <input
@@ -375,7 +402,14 @@ export default function AdminProductsPage() {
                         )}
                       </div>
                       <div>
-                        <p className="font-medium">{product.name}</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="font-medium">{product.name}</p>
+                          {product.active === false && (
+                            <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
+                              숨김
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">{product.brand}</p>
                       </div>
                     </div>
@@ -448,6 +482,22 @@ export default function AdminProductsPage() {
                       >
                         <Copy className="w-4 h-4" />
                       </Link>
+                      
+                      <button
+                        onClick={() => handleToggleActive(product.id, product.active)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          product.active !== false 
+                            ? 'hover:bg-orange-100 text-orange-600' 
+                            : 'hover:bg-green-100 text-green-600'
+                        }`}
+                        title={product.active !== false ? '비활성화 (숨김)' : '활성화 (표시)'}
+                      >
+                        {product.active !== false ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
                       
                       <button
                         onClick={() => handleDeleteProduct(product.id)}

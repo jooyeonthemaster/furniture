@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { ProductForm, initialForm } from '../types';
+import { ProductForm, initialForm } from '@/components/admin-product/types';
 
 export function useEditProduct(productId: string) {
   const router = useRouter();
@@ -116,12 +116,25 @@ export function useEditProduct(productId: string) {
     loadProductData();
   }, [productId, router]);
 
-  // 입력 핸들러들
-  const handleInputChange = (field: string, value: any) => {
+  // 입력 핸들러들 (메모이제이션으로 안정성 확보)
+  const handleInputChange = useCallback((field: string, value: any) => {
+    console.log(`handleInputChange called: ${field}`, value);
+    console.log(`handleInputChange type: ${typeof handleInputChange}`);
     setForm(prev => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
-  const handleNestedInputChange = (parent: string, field: string, value: any) => {
+  // 안전한 handleInputChange - 항상 함수임을 보장
+  const safeHandleInputChange = useCallback((field: string, value: any) => {
+    if (typeof handleInputChange === 'function') {
+      handleInputChange(field, value);
+    } else {
+      console.error('handleInputChange is not a function in useEditProduct!');
+      // 직접 setForm 호출로 fallback
+      setForm(prev => ({ ...prev, [field]: value }));
+    }
+  }, [handleInputChange]);
+
+  const handleNestedInputChange = useCallback((parent: string, field: string, value: any) => {
     setForm(prev => ({
       ...prev,
       [parent]: {
@@ -129,21 +142,21 @@ export function useEditProduct(productId: string) {
         [field]: value
       }
     }));
-  };
+  }, []);
 
-  const handleArrayAdd = (field: string, value: string) => {
+  const handleArrayAdd = useCallback((field: string, value: string) => {
     setForm(prev => ({
       ...prev,
       [field]: [...(prev[field as keyof ProductForm] as string[]), value]
     }));
-  };
+  }, []);
 
-  const handleArrayRemove = (field: string, index: number) => {
+  const handleArrayRemove = useCallback((field: string, index: number) => {
     setForm(prev => ({
       ...prev,
       [field]: (prev[field as keyof ProductForm] as string[]).filter((_, i) => i !== index)
     }));
-  };
+  }, []);
 
   // 폼 검증
   const validateForm = () => {
@@ -315,11 +328,15 @@ export function useEditProduct(productId: string) {
     }
   };
 
+  // 디버깅용 로그 (필요시 주석 해제)
+  // console.log('useEditProduct: Returning handlers, handleInputChange type:', typeof safeHandleInputChange);
+  // console.log('useEditProduct: Current form.overviewImages:', form.overviewImages);
+
   return {
     form,
     isLoading,
     isSubmitting,
-    handleInputChange,
+    handleInputChange: safeHandleInputChange, // 안전한 버전 사용
     handleNestedInputChange,
     handleArrayAdd,
     handleArrayRemove,

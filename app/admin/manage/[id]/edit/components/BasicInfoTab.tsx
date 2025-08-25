@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, X, Settings } from 'lucide-react';
-import { ProductForm, conditions } from '../types';
+import { categories, ProductForm, conditions } from '@/components/admin-product/types';
 
 interface BasicInfoTabProps {
   form: ProductForm;
@@ -142,15 +142,9 @@ export default function BasicInfoTab({
             onChange={(e) => handleInputChange('category', e.target.value)}
             className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
           >
-            <option value="new">New</option>
-            <option value="furniture">Furniture</option>
-            <option value="lighting">Lighting</option>
-            <option value="kitchen">Kitchen</option>
-            <option value="accessories">Accessories</option>
-            <option value="textile">Textile</option>
-            <option value="kids">Kids</option>
-            <option value="book">Book</option>
-            <option value="sale">Sale</option>
+            {categories.map(category => (
+              <option key={category.value} value={category.value}>{category.label}</option>
+            ))}
           </select>
         </div>
         <div>

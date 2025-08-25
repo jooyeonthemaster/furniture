@@ -164,6 +164,8 @@ export interface Product {
   views: number;
   likes: number;
   rating?: number;
+  // 상품 활성화 상태 (관리자용)
+  active?: boolean; // true: 활성화(표시), false: 비활성화(숨김), undefined: 기본값(활성화)
 }
 
 export type ProductCategory = 

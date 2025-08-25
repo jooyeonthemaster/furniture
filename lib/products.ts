@@ -183,8 +183,6 @@ export async function getFilteredProducts(filters: {
       q = query(q, where('condition', '==', filters.condition));
     }
     
-
-    
     if (filters.featured !== undefined) {
       q = query(q, where('featured', '==', filters.featured));
     }
@@ -209,6 +207,9 @@ export async function getFilteredProducts(filters: {
         updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
       };
     }) as Product[];
+    
+    // 비활성화된 상품 필터링 (고객용 - active가 false인 상품 제외)
+    products = products.filter(p => p.active !== false);
     
     // 가격 필터링 (클라이언트 사이드)
     if (filters.minPrice !== undefined) {
@@ -312,6 +313,24 @@ export async function updateProductStatus(productId: string, status: 'active' | 
   } catch (error) {
     console.error('상품 상태 변경 실패:', error);
     throw new Error('상품 상태 변경에 실패했습니다.');
+  }
+}
+
+// 상품 활성화/비활성화 토글 (관리자용)
+export async function toggleProductActive(productId: string, active: boolean) {
+  try {
+    const productRef = doc(db, PRODUCTS_COLLECTION, productId);
+    
+    await updateDoc(productRef, {
+      active,
+      updatedAt: serverTimestamp()
+    });
+    
+    console.log(`상품 ${productId} ${active ? '활성화' : '비활성화'} 완료`);
+    return true;
+  } catch (error) {
+    console.error('상품 활성화 상태 변경 실패:', error);
+    throw new Error('상품 활성화 상태 변경에 실패했습니다.');
   }
 }
 

@@ -82,6 +82,9 @@ export interface ProductForm {
   featured: boolean;
   rawDescriptionText: string;
   
+  // 연계 상품 추천 기능
+  relatedProducts: string[];
+  
   // 소스 정보
   source: {
     type: string;
@@ -148,6 +151,7 @@ export const initialForm: ProductForm = {
   tags: [],
   featured: false,
   rawDescriptionText: '',
+  relatedProducts: [],
   source: {
     type: 'model-house',
     name: '',
@@ -180,15 +184,15 @@ export const sourceTypes = [
 ];
 
 export const categories = [
-  { value: 'new', label: '신상품' },
-  { value: 'furniture', label: '가구' },
-  { value: 'lighting', label: '조명' },
-  { value: 'kitchen', label: '주방용품' },
-  { value: 'accessories', label: '액세서리' },
-  { value: 'textile', label: '텍스타일' },
-  { value: 'kids', label: '키즈' },
-  { value: 'book', label: '북' },
-  { value: 'sale', label: '세일' }
+  { value: 'new', label: 'New' },
+  { value: 'furniture', label: 'Furniture' },
+  { value: 'lighting', label: 'Lighting' },
+  { value: 'kitchen', label: 'Kitchen' },
+  { value: 'accessories', label: 'Accessories' },
+  { value: 'textile', label: 'Textile' },
+  { value: 'kids', label: 'Kids' },
+  { value: 'book', label: 'Book' },
+  { value: 'sale', label: 'Sale' }
 ];
 
 export const availabilityOptions = [

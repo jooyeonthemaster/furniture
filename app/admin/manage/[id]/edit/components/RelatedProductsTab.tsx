@@ -6,7 +6,7 @@ import Image from 'next/image';
 import CategoryFilter from '@/components/admin/CategoryFilter';
 import { getProductsByCategory, searchProducts } from '@/lib/products';
 import { Product } from '@/types';
-import { ProductForm } from '../types';
+import { ProductForm } from '@/components/admin-product/types';
 
 interface RelatedProductsTabProps {
   form: ProductForm;

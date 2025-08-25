@@ -42,6 +42,17 @@ export default function EditProductPage() {
 
   // 탭별 컴포넌트 렌더링 함수
   const renderTabContent = () => {
+    // 핸들러 함수들이 제대로 정의되었는지 확인
+    if (typeof handleInputChange !== 'function') {
+      console.error('EditProductPage: handleInputChange is not a function');
+      return (
+        <div className="p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">데이터 로딩 중...</p>
+        </div>
+      );
+    }
+
     switch (currentTab) {
       case 'basic':
         return (
@@ -54,6 +65,7 @@ export default function EditProductPage() {
           />
         );
       case 'description':
+        console.log('EditProductPage: Rendering DescriptionTab, handleInputChange type:', typeof handleInputChange);
         return (
           <DescriptionTab
             form={form}

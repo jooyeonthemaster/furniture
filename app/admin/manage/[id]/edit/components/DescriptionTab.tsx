@@ -3,7 +3,7 @@
 import { Eye } from 'lucide-react';
 import Image from 'next/image';
 import OverviewImageUploader from '@/components/admin/OverviewImageUploader';
-import { ProductForm } from '../types';
+import { ProductForm } from '@/components/admin-product/types';
 
 interface DescriptionTabProps {
   form: ProductForm;
@@ -14,6 +14,17 @@ export default function DescriptionTab({
   form,
   handleInputChange
 }: DescriptionTabProps) {
+  // handleInputChange가 함수인지 확인
+  if (typeof handleInputChange !== 'function') {
+    console.error('DescriptionTab: handleInputChange is not a function:', handleInputChange);
+    return (
+      <div className="p-8 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">컴포넌트 로딩 중...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* 상품 개요 섹션 */}
@@ -52,8 +63,15 @@ Herman Miller Aeron Chair는 1994년 출시 이후 전 세계 오피스 가구�
             </label>
             
             <OverviewImageUploader
-              images={form.overviewImages}
-              onImagesChange={(images) => handleInputChange('overviewImages', images)}
+              images={form.overviewImages || []}
+              onImagesChange={
+                typeof handleInputChange === 'function' 
+                  ? (images) => {
+                      console.log('DescriptionTab: OverviewImages changed:', images);
+                      handleInputChange('overviewImages', images);
+                    }
+                  : undefined // 함수가 아닌 경우 undefined 전달하여 OverviewImageUploader에서 처리
+              }
               maxImages={10}
               maxFileSize={5}
             />

@@ -1,6 +1,6 @@
 'use client';
 
-import { ProductForm, sourceTypes } from '../types';
+import { ProductForm, sourceTypes } from '@/components/admin-product/types';
 
 interface SourceTabProps {
   form: ProductForm;

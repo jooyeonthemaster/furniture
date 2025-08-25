@@ -163,7 +163,12 @@ export default function ImageUploader({
       }
     }
 
-    onImagesChange([...images, ...newImages]);
+    // onImagesChange가 함수인지 확인
+    if (typeof onImagesChange === 'function') {
+      onImagesChange([...images, ...newImages]);
+    } else {
+      console.error('onImagesChange is not a function:', onImagesChange);
+    }
     setUploading(false);
   };
 
@@ -198,7 +203,9 @@ export default function ImageUploader({
       ...img,
       isPrimary: img.id === imageId
     }));
-    onImagesChange(updatedImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(updatedImages);
+    }
   };
 
   const handleRemoveImage = (imageId: string) => {
@@ -209,7 +216,9 @@ export default function ImageUploader({
       updatedImages[0].isPrimary = true;
     }
     
-    onImagesChange(updatedImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(updatedImages);
+    }
   };
 
   const handleReorder = (newImages: ImageItem[]) => {
@@ -218,7 +227,9 @@ export default function ImageUploader({
       ...img,
       isPrimary: index === 0
     }));
-    onImagesChange(reorderedImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(reorderedImages);
+    }
   };
 
   const handleMoveUp = (index: number) => {
@@ -250,7 +261,9 @@ export default function ImageUploader({
         : img
     );
     
-    onImagesChange(updatedImages);
+    if (typeof onImagesChange === 'function') {
+      onImagesChange(updatedImages);
+    }
     setEditingImage(null);
     setImageAlt('');
     setImageCaption('');

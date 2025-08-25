@@ -91,8 +91,17 @@ export default function AdminDescription({
           상품 개요를 설명하는 전용 이미지들입니다. 상품 상세 페이지의 개요 탭에 세로로 표시됩니다.
         </p>
         <OverviewImageUploader
-          images={form.overviewImages}
-          onChange={(images) => handleInputChange('overviewImages', images)}
+          images={form.overviewImages || []}
+          onImagesChange={
+            typeof handleInputChange === 'function'
+              ? (images) => {
+                  console.log('AdminDescription: OverviewImages changed:', images);
+                  handleInputChange('overviewImages', images);
+                }
+              : undefined
+          }
+          maxImages={10}
+          maxFileSize={5}
         />
       </div>
 

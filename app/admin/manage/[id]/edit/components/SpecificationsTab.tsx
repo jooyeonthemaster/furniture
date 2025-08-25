@@ -1,6 +1,6 @@
 'use client';
 
-import { ProductForm } from '../types';
+import { ProductForm } from '@/components/admin-product/types';
 
 interface SpecificationsTabProps {
   form: ProductForm;

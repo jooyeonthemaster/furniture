@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus, X } from 'lucide-react';
-import { ProductForm } from '../types';
+import { ProductForm } from '@/components/admin-product/types';
 
 interface ConditionTabProps {
   form: ProductForm;

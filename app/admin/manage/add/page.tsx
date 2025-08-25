@@ -1,221 +1,62 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { addProduct } from '@/lib/products';
-import {
-  AdminFormNavigation,
-  AdminBasicInfo,
-  AdminDescription,
-  AdminCondition,
-  AdminSpecifications,
-  AdminImages,
-  AdminSource,
-  ProductForm,
-  initialForm
-} from '@/components/admin-product';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Save, Eye } from 'lucide-react';
+import Link from 'next/link';
+
+// 수정 페이지의 깔끔한 컴포넌트들 사용
+import BasicInfoTab from '../[id]/edit/components/BasicInfoTab';
+import DescriptionTab from '../[id]/edit/components/DescriptionTab';
+import ConditionTab from '../[id]/edit/components/ConditionTab';
+import SpecificationsTab from '../[id]/edit/components/SpecificationsTab';
+import ImagesTab from '../[id]/edit/components/ImagesTab';
+import SourceTab from '../[id]/edit/components/SourceTab';
+import RelatedProductsTab from '../[id]/edit/components/RelatedProductsTab';
+
+// 커스텀 훅
+import { useAddProduct } from './hooks/useAddProduct';
 
 export default function AddProductPage() {
-  const router = useRouter();
-  const [form, setForm] = useState<ProductForm>(initialForm);
   const [currentTab, setCurrentTab] = useState('basic');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newTag, setNewTag] = useState('');
+  
+  // 커스텀 훅으로 모든 폼 로직 처리
+  const {
+    form,
+    isSubmitting,
+    handleInputChange,
+    handleNestedInputChange,
+    handleArrayAdd,
+    handleArrayRemove,
+    handleSubmit
+  } = useAddProduct();
 
-  const handleInputChange = (field: string, value: any) => {
-    setForm(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleNestedInputChange = (parent: string, field: string, value: any) => {
-    setForm(prev => ({
-      ...prev,
-      [parent]: {
-        ...(prev[parent as keyof ProductForm] as any),
-        [field]: value
-      }
-    }));
-  };
-
-  const handleArrayAdd = (field: string, value: string) => {
-    if (!value.trim()) return;
-    
-    setForm(prev => ({
-      ...prev,
-      [field]: [...(prev[field as keyof ProductForm] as string[]), value.trim()]
-    }));
-  };
-
-  const handleArrayRemove = (field: string, index: number) => {
-    setForm(prev => ({
-      ...prev,
-      [field]: (prev[field as keyof ProductForm] as string[]).filter((_, i) => i !== index)
-    }));
-  };
-
+  // 태그 관련 헬퍼 함수들
   const handleTagAdd = () => {
     if (newTag.trim() && !form.tags.includes(newTag.trim())) {
-      setForm(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
+      handleArrayAdd('tags', newTag.trim());
       setNewTag('');
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+  // 탭 정의 (수정 페이지와 동일)
+  const tabs = [
+    { id: 'basic', label: '기본 정보' },
+    { id: 'description', label: '상품 설명' },
+    { id: 'condition', label: '상태 정보' },
+    { id: 'specifications', label: '제품 사양' },
+    { id: 'images', label: '이미지' },
+    { id: 'related', label: '연계 상품' },
+    { id: 'source', label: '소스 정보' }
+  ];
 
-    // ImageUploader 컴포넌트를 사용하도록 변경 필요
-    // 이 함수는 더 이상 사용하지 않음 - AdminImages 컴포넌트에서 처리
-    console.warn('handleImageUpload는 더 이상 사용되지 않습니다. AdminImages 컴포넌트를 사용하세요.');
-  };
-
-  // 폼 검증 함수
-  const validateForm = () => {
-    const errors: string[] = [];
-    
-    // 필수 필드 검증
-    if (!form.name.trim()) errors.push('상품명');
-    if (!form.brand.trim()) errors.push('브랜드');
-    if (!form.description.trim()) errors.push('상품 설명');
-    if (form.originalPrice <= 0) errors.push('정가 (0원보다 커야 함)');
-    if (form.salePrice <= 0) errors.push('할인가 (0원보다 커야 함)');
-    if (form.stockCount < 0) errors.push('재고 수량 (0개 이상이어야 함)');
-    if (form.images.length === 0) errors.push('상품 이미지 (최소 1개)');
-    
-    return errors;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // 폼 검증
-    const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
-      alert(`다음 정보를 입력해주세요:\n\n• ${validationErrors.join('\n• ')}`);
-      return;
-    }
-    
-    setIsSubmitting(true);
-
-    try {
-      // 폼 데이터를 Product 타입에 맞게 변환
-      const productData = {
-        name: form.name,
-        brand: form.brand,
-        category: form.category as any,
-        subcategory: form.subcategory || '',
-        model: form.model || '',
-        sku: form.sku || '',
-        description: form.description,
-        // 상품 개요 필드 추가
-        overviewDescription: form.overviewDescription || '',
-        overviewImages: form.overviewImages.map(img => img.url),
-        originalPrice: form.originalPrice,
-        salePrice: form.salePrice,
-        discount: Math.round(((form.originalPrice - form.salePrice) / form.originalPrice) * 100),
-        condition: form.condition as any,
-        availability: form.availability as any,
-        images: form.images
-          .map(img => img.url)
-          .filter(url => !url.startsWith('blob:')), // blob URL 제거
-        // 치수 정보 - 자유 입력 형식 지원
-        dimensions: form.specifications.dimensions ? (() => {
-          // 숫자x숫자x숫자 형식인 경우에만 파싱, 아니면 undefined로 설정
-          const dimensionParts = form.specifications.dimensions.split('x');
-          if (dimensionParts.length === 3) {
-            const width = parseInt(dimensionParts[0]?.trim()) || 0;
-            const height = parseInt(dimensionParts[1]?.trim()) || 0;
-            const depth = parseInt(dimensionParts[2]?.trim()) || 0;
-            
-            // 모든 값이 유효한 숫자인 경우에만 dimensions 객체 생성
-            if (width > 0 || height > 0 || depth > 0) {
-              return {
-                width,
-                height,
-                depth,
-                unit: 'cm' as const
-              };
-            }
-          }
-          return undefined;
-        })() : undefined,
-        materials: form.specifications.material ? [form.specifications.material] : [],
-        colors: form.specifications.color ? [form.specifications.color] : [],
-        stock: form.stockCount,
-        featured: form.featured,
-        source: form.source.type as any,
-        sourceDetails: form.source.name || '',
-        sourceLocation: form.source.location || '',
-        sourceDate: form.source.date || '',
-        sourceUsage: form.source.usage || '',
-        tags: form.tags,
-        // 상품 옵션 필드 추가
-        hasOptions: form.hasOptions,
-        options: form.hasOptions ? form.options : undefined,
-        // 연계 상품 추천 기능
-        relatedProducts: [],
-        // 상세 설명
-        detailedDescription: form.detailedDescription.overview ? form.detailedDescription : undefined,
-        // 상태 리포트
-        conditionReport: form.conditionReport.overall ? form.conditionReport : undefined,
-        // 사용 가이드
-        usageGuide: (form.usageGuide.setup.length > 0 || form.usageGuide.maintenance.length > 0 || form.usageGuide.tips.length > 0) 
-          ? form.usageGuide : undefined,
-        // 제품 사양
-        specifications: {
-          dimensions: form.specifications.dimensions || '',
-          weight: form.specifications.weight || '',
-          maxWeight: form.specifications.maxWeight || '',
-          material: form.specifications.material || '',
-          color: form.specifications.color || '',
-          origin: form.specifications.origin || '',
-          year: form.specifications.year || ''
-        },
-        // 배송 정보
-        shipping: form.shipping,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        views: 0,
-        likes: 0
-      };
-      
-      console.log('상품 데이터 저장 중:', productData);
-      
-      const productId = await addProduct(productData);
-      console.log('상품 저장 성공, ID:', productId);
-      
-      alert('상품이 성공적으로 등록되었습니다!');
-      router.push('/admin/manage');
-    } catch (error) {
-      console.error('상품 등록 실패:', error);
-      alert('상품 등록에 실패했습니다: ' + (error as Error).message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const renderCurrentTab = () => {
+  // 탭별 컴포넌트 렌더링 함수 (수정 페이지와 동일한 컴포넌트 사용)
+  const renderTabContent = () => {
     switch (currentTab) {
       case 'basic':
         return (
-          <AdminBasicInfo
-            form={form}
-            handleInputChange={handleInputChange}
-            newTag={newTag}
-            setNewTag={setNewTag}
-            handleTagAdd={handleTagAdd}
-            handleArrayRemove={handleArrayRemove}
-          />
-        );
-        
-      case 'description':
-        return (
-          <AdminDescription
+          <BasicInfoTab
             form={form}
             handleInputChange={handleInputChange}
             handleNestedInputChange={handleNestedInputChange}
@@ -223,43 +64,49 @@ export default function AddProductPage() {
             handleArrayRemove={handleArrayRemove}
           />
         );
-        
-      case 'condition':
+      case 'description':
         return (
-          <AdminCondition
-            form={form}
-            handleNestedInputChange={handleNestedInputChange}
-          />
-        );
-        
-      case 'guide':
-      case 'specifications':
-        return (
-          <AdminSpecifications
-            form={form}
-            handleNestedInputChange={handleNestedInputChange}
-          />
-        );
-        
-      case 'images':
-        return (
-          <AdminImages
+          <DescriptionTab
             form={form}
             handleInputChange={handleInputChange}
-            handleImageUpload={handleImageUpload}
           />
         );
-        
-      case 'source':
+      case 'condition':
         return (
-          <AdminSource
+          <ConditionTab
             form={form}
             handleNestedInputChange={handleNestedInputChange}
-            isSubmitting={isSubmitting}
-            onSubmit={handleSubmit}
           />
         );
-        
+      case 'specifications':
+        return (
+          <SpecificationsTab
+            form={form}
+            handleNestedInputChange={handleNestedInputChange}
+          />
+        );
+      case 'images':
+        return (
+          <ImagesTab
+            form={form}
+            handleInputChange={handleInputChange}
+          />
+        );
+      case 'related':
+        return (
+          <RelatedProductsTab
+            form={form}
+            handleInputChange={handleInputChange}
+            productId="" // 새 상품이므로 빈 문자열
+          />
+        );
+      case 'source':
+        return (
+          <SourceTab
+            form={form}
+            handleNestedInputChange={handleNestedInputChange}
+          />
+        );
       default:
         return null;
     }
@@ -267,15 +114,70 @@ export default function AddProductPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AdminFormNavigation
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
-      />
-      
-      <div className="container mx-auto px-4 py-8">
-        <form onSubmit={handleSubmit}>
-          {renderCurrentTab()}
-        </form>
+      <div className="max-w-6xl mx-auto p-6">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/admin/manage"
+              className="p-2 hover:bg-muted rounded-lg"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold">상품 등록</h1>
+              <p className="text-muted-foreground">
+                새로운 상품을 등록하세요
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              className="flex items-center space-x-2 px-4 py-2 border rounded-lg hover:bg-muted"
+            >
+              <Eye className="w-4 h-4" />
+              <span>미리보기</span>
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex items-center space-x-2 bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{isSubmitting ? '저장 중...' : '저장'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 탭 네비게이션 */}
+        <div className="flex space-x-1 bg-muted p-1 rounded-lg mb-8 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setCurrentTab(tab.id)}
+              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                currentTab === tab.id
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* 폼 내용 */}
+        <motion.div
+          key={currentTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-card rounded-lg border p-6"
+        >
+          {renderTabContent()}
+        </motion.div>
       </div>
     </div>
   );
