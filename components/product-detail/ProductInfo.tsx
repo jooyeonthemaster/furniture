@@ -292,8 +292,16 @@ export default function ProductInfo({
           <Truck className="w-4 h-4" />
           <span className="text-sm font-medium">배송 정보</span>
         </div>
-        <p className="text-sm text-muted-foreground">무료배송 • 2-3일 소요</p>
-        <p className="text-sm text-muted-foreground">설치 서비스 별도 문의</p>
+        <p className="text-sm text-muted-foreground">
+          {product.shipping?.free ? '무료배송' : '유료배송'} • {product.shipping?.period || '3-5일'} 소요
+        </p>
+        {product.shipping?.installation ? (
+          <p className="text-sm text-muted-foreground">
+            설치 서비스 {product.shipping.installationFee > 0 ? `${product.shipping.installationFee.toLocaleString()}원` : '무료'}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">설치 서비스 별도 문의</p>
+        )}
       </div>
     </div>
   );

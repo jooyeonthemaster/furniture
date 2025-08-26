@@ -65,12 +65,21 @@ export function useEditProduct(productId: string) {
               tips: productData.usageGuide?.tips || []
             },
             specifications: {
-              dimensions: productData.dimensions ? 
-                `${productData.dimensions.width}x${productData.dimensions.height}x${productData.dimensions.depth}` : '',
-              weight: productData.specifications?.weight || '',
-              maxWeight: productData.specifications?.maxWeight || '',
-              material: productData.materials?.[0] || '',
-              color: productData.colors?.[0] || '',
+              size: (() => {
+                // 기존 데이터를 size로 통합
+                const parts = [];
+                if (productData.dimensions) {
+                  parts.push(`W ${productData.dimensions.width} x D ${productData.dimensions.depth} x H ${productData.dimensions.height}`);
+                } else if (productData.specifications?.dimensions) {
+                  parts.push(productData.specifications.dimensions);
+                }
+                if (productData.specifications?.weight) {
+                  parts.push(productData.specifications.weight);
+                }
+                return parts.join(', ') || productData.specifications?.size || '';
+              })(),
+              material: productData.materials?.[0] || productData.specifications?.material || '',
+              color: productData.colors?.[0] || productData.specifications?.color || '',
               origin: productData.specifications?.origin || '',
               year: productData.specifications?.year || ''
             },
@@ -243,9 +252,9 @@ export function useEditProduct(productId: string) {
         options: form.hasOptions ? form.options : [],
         
         // 치수 정보 - 자유 입력 형식 지원 (undefined 방지)
-        dimensions: form.specifications.dimensions ? (() => {
-          // 숫자x숫자x숫자 형식인 경우에만 파싱
-          const dimensionParts = form.specifications.dimensions.split('x');
+        dimensions: form.specifications.size ? (() => {
+          // size 필드에서 숫자x숫자x숫자 형식 파싱 시도
+          const dimensionParts = form.specifications.size.split('x');
           if (dimensionParts.length === 3) {
             const width = parseInt(dimensionParts[0]?.trim()) || 0;
             const height = parseInt(dimensionParts[1]?.trim()) || 0;
@@ -280,9 +289,7 @@ export function useEditProduct(productId: string) {
         
         // 제품 사양 (전체)
         specifications: {
-          dimensions: form.specifications.dimensions || '',
-          weight: form.specifications.weight || '',
-          maxWeight: form.specifications.maxWeight || '',
+          size: form.specifications.size || '',
           material: form.specifications.material || '',
           color: form.specifications.color || '',
           origin: form.specifications.origin || '',

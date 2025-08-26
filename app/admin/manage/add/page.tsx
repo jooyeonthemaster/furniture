@@ -9,6 +9,7 @@ import Link from 'next/link';
 import BasicInfoTab from '../[id]/edit/components/BasicInfoTab';
 import DescriptionTab from '../[id]/edit/components/DescriptionTab';
 import ConditionTab from '../[id]/edit/components/ConditionTab';
+import GuideTab from '../[id]/edit/components/GuideTab';
 import SpecificationsTab from '../[id]/edit/components/SpecificationsTab';
 import ImagesTab from '../[id]/edit/components/ImagesTab';
 import SourceTab from '../[id]/edit/components/SourceTab';
@@ -45,6 +46,7 @@ export default function AddProductPage() {
     { id: 'basic', label: '기본 정보' },
     { id: 'description', label: '상품 설명' },
     { id: 'condition', label: '상태 정보' },
+    { id: 'guide', label: '사용 가이드' },
     { id: 'specifications', label: '제품 사양' },
     { id: 'images', label: '이미지' },
     { id: 'related', label: '연계 상품' },
@@ -74,6 +76,13 @@ export default function AddProductPage() {
       case 'condition':
         return (
           <ConditionTab
+            form={form}
+            handleNestedInputChange={handleNestedInputChange}
+          />
+        );
+      case 'guide':
+        return (
+          <GuideTab
             form={form}
             handleNestedInputChange={handleNestedInputChange}
           />

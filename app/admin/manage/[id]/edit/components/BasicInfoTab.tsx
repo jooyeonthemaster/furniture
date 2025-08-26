@@ -27,6 +27,10 @@ export default function BasicInfoTab({
   const [newOptionStock, setNewOptionStock] = useState<number | ''>('');
   const [newColorCode, setNewColorCode] = useState<string>('#000000');
   const [editingOptionId, setEditingOptionId] = useState<string | null>(null);
+  
+  // 옵션 값 재고 수정 관련 상태
+  const [editingStockValueId, setEditingStockValueId] = useState<string | null>(null);
+  const [tempStockValue, setTempStockValue] = useState<number>(0);
 
   const handleTagAdd = () => {
     if (newTag.trim() && !form.tags.includes(newTag.trim())) {
@@ -106,6 +110,43 @@ export default function BasicInfoTab({
     });
 
     handleInputChange('options', updatedOptions);
+  };
+
+  // 옵션 값 재고 수정 관련 함수들
+  const handleEditOptionValueStock = (valueId: string, currentStock: number) => {
+    setEditingStockValueId(valueId);
+    setTempStockValue(currentStock);
+  };
+
+  const handleUpdateOptionValueStock = (optionId: string, valueId: string) => {
+    if (tempStockValue < 0) {
+      alert('재고는 0 이상이어야 합니다.');
+      return;
+    }
+
+    const updatedOptions = form.options.map(option => {
+      if (option.id === optionId) {
+        return {
+          ...option,
+          values: option.values.map(value => {
+            if (value.id === valueId) {
+              return { ...value, stockQuantity: tempStockValue };
+            }
+            return value;
+          })
+        };
+      }
+      return option;
+    });
+
+    handleInputChange('options', updatedOptions);
+    setEditingStockValueId(null);
+    setTempStockValue(0);
+  };
+
+  const handleCancelEditStock = () => {
+    setEditingStockValueId(null);
+    setTempStockValue(0);
   };
 
   return (
@@ -352,9 +393,47 @@ export default function BasicInfoTab({
                             )}
                             <span>{value.value}</span>
                             {value.stockQuantity !== undefined && (
-                              <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                                재고: {value.stockQuantity}개
-                              </span>
+                              <div className="flex items-center space-x-1">
+                                {editingStockValueId === value.id ? (
+                                  // 편집 모드
+                                  <div className="flex items-center space-x-1">
+                                    <input
+                                      type="number"
+                                      value={tempStockValue}
+                                      onChange={(e) => setTempStockValue(Number(e.target.value))}
+                                      className="w-16 px-1 py-0.5 text-xs border rounded focus:ring-1 focus:ring-primary"
+                                      min="0"
+                                      autoFocus
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdateOptionValueStock(option.id, value.id)}
+                                      className="text-xs bg-green-500 text-white px-1 py-0.5 rounded hover:bg-green-600"
+                                      title="저장"
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={handleCancelEditStock}
+                                      className="text-xs bg-gray-500 text-white px-1 py-0.5 rounded hover:bg-gray-600"
+                                      title="취소"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ) : (
+                                  // 표시 모드
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditOptionValueStock(value.id, value.stockQuantity || 0)}
+                                    className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded hover:bg-primary/30 transition-colors"
+                                    title="재고 수정하기"
+                                  >
+                                    재고: {value.stockQuantity}개
+                                  </button>
+                                )}
+                              </div>
                             )}
                             <button
                               type="button"

@@ -88,9 +88,7 @@ export default function AdminSpecifications({ form, handleNestedInputChange }: A
           {Object.entries(form.specifications).map(([key, value]) => (
             <div key={key}>
               <label className="block text-sm font-medium mb-2">
-                {key === 'dimensions' ? '치수' :
-                 key === 'weight' ? '무게' :
-                 key === 'maxWeight' ? '최대 하중' :
+                {key === 'size' ? '사이즈' :
                  key === 'material' ? '소재' :
                  key === 'color' ? '색상' :
                  key === 'origin' ? '원산지' :
@@ -102,9 +100,7 @@ export default function AdminSpecifications({ form, handleNestedInputChange }: A
                 onChange={(e) => handleNestedInputChange('specifications', key, e.target.value)}
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary"
                 placeholder={
-                  key === 'dimensions' ? '예: W 162 x D 208 x H 125 (매트리스 사이즈: W 160 x D 200 x H 28) 또는 100x80x50' :
-                  key === 'weight' ? '예: 21kg' :
-                  key === 'maxWeight' ? '예: 136kg' :
+                  key === 'size' ? '예: W 162 x D 208 x H 125, 21kg' :
                   key === 'material' ? '예: 8Z 펠리클 메쉬, 알루미늄' :
                   key === 'color' ? '예: 차콜' :
                   key === 'origin' ? '예: 미국' :

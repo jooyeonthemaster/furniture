@@ -10,6 +10,7 @@ import Link from 'next/link';
 import BasicInfoTab from './components/BasicInfoTab';
 import DescriptionTab from './components/DescriptionTab';
 import ConditionTab from './components/ConditionTab';
+import GuideTab from './components/GuideTab';
 import SpecificationsTab from './components/SpecificationsTab';
 import ImagesTab from './components/ImagesTab';
 import RelatedProductsTab from './components/RelatedProductsTab';
@@ -75,6 +76,13 @@ export default function EditProductPage() {
       case 'condition':
         return (
           <ConditionTab
+            form={form}
+            handleNestedInputChange={handleNestedInputChange}
+          />
+        );
+      case 'guide':
+        return (
+          <GuideTab
             form={form}
             handleNestedInputChange={handleNestedInputChange}
           />

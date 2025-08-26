@@ -144,9 +144,7 @@ export interface Product {
   };
   // 제품 사양
   specifications?: {
-    dimensions?: string;
-    weight?: string;
-    maxWeight?: string;
+    size?: string; // dimensions와 weight를 통합
     material?: string;
     color?: string;
     origin?: string;

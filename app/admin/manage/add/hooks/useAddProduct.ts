@@ -93,9 +93,9 @@ export function useAddProduct() {
           .map(img => img.url)
           .filter(url => !url.startsWith('blob:')), // blob URL 제거
         // 치수 정보 - 자유 입력 형식 지원
-        dimensions: form.specifications.dimensions ? (() => {
-          // 숫자x숫자x숫자 형식인 경우에만 파싱, 아니면 undefined로 설정
-          const dimensionParts = form.specifications.dimensions.split('x');
+        dimensions: form.specifications.size ? (() => {
+          // size 필드에서 숫자x숫자x숫자 형식 파싱 시도
+          const dimensionParts = form.specifications.size.split('x');
           if (dimensionParts.length === 3) {
             const width = parseInt(dimensionParts[0]?.trim()) || 0;
             const height = parseInt(dimensionParts[1]?.trim()) || 0;
@@ -137,9 +137,7 @@ export function useAddProduct() {
           ? form.usageGuide : undefined,
         // 제품 사양
         specifications: {
-          dimensions: form.specifications.dimensions || '',
-          weight: form.specifications.weight || '',
-          maxWeight: form.specifications.maxWeight || '',
+          size: form.specifications.size || '',
           material: form.specifications.material || '',
           color: form.specifications.color || '',
           origin: form.specifications.origin || '',

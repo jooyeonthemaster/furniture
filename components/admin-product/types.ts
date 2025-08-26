@@ -60,9 +60,7 @@ export interface ProductForm {
   
   // 제품 사양
   specifications: {
-    dimensions: string;
-    weight: string;
-    maxWeight: string;
+    size: string; // dimensions와 weight를 통합
     material: string;
     color: string;
     origin: string;
@@ -139,9 +137,7 @@ export const initialForm: ProductForm = {
     tips: []
   },
   specifications: {
-    dimensions: '',
-    weight: '',
-    maxWeight: '',
+    size: '',
     material: '',
     color: '',
     origin: '',

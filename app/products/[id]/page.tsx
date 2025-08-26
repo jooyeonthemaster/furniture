@@ -28,7 +28,7 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [relatedLoading, setRelatedLoading] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('overview');
+  const [selectedTab, setSelectedTab] = useState('description');
   const [quantity, setQuantity] = useState(1);
   const [relatedQuantities, setRelatedQuantities] = useState<Record<string, number>>({});
   const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({});
